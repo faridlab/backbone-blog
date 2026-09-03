@@ -1,0 +1,126 @@
+# =============================================================================
+# blog — the aggregate's content grain: Post.
+#
+# PORT DECISIONS (source: docs/odoo/website/blog):
+#  - The publication FENCE PAIR (`is_published` + `published_date`) is
+#    stored but verb-fenced: the publish/unpublish verbs are the ONLY
+#    writers; a generic PATCH carrying either is a typed refusal. The
+#    publish coupling is ONE transaction (guarded FOR UPDATE flip, a CASE
+#    stamp that PRESERVES a pre-set future published_date, ONE audit row,
+#    the notifier port) — never three write-override side effects.
+#  - `post_date` is the LAZY SCHEDULE carrier: a future post_date is the
+#    only scheduling mechanism (every public read composes
+#    `post_date <= now()`; nothing ever "fires"; the module owns ZERO
+#    crons). `post_date`/`published_date` are two declared columns with
+#    one contract — the Odoo compute-inverse confusion is not ported.
+#  - `website_id` is an OWNED column (not a related-stored compute): the
+#    (post.website_id = blog.website_id) invariant is enforced by a hand
+#    constraint trigger (the hardening migration).
+#  - `content` is stored verbatim (sanitize=False posture) — sanitization
+#    is the rendering layer's concern.
+#  - `cover` is a STRUCTURED json `{image_url}` — the Odoo raw
+#    `url('...')` string-slicing is not ported.
+#  - `author_name` is a plain editable column — the Odoo stored-related
+#    oddity is not ported as a related.
+#  - `visits` is written ONLY by the visit verb (readonly-in-API); the
+#    Odoo session-dedup becomes the receipt-ledger dedup wall.
+#  - `archived_by_blog_id` is the D5 cascade marker: blog-archive stamps
+#    it, blog-unarchive restores exactly the rows carrying it.
+# =============================================================================
+
+models:
+
+  - name: Post
+    collection: posts
+    read_only: true
+    description: "Post — the content grain. Read-only over HTTP: posts are created, patched through the typed whitelist (the fence pair refused), published/unpublished (the fence verbs), archived/unarchived (one-way), and tagged — only through the typed verbs."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
+        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
+      blog_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Blog.blogs)", "@indexed"]
+        description: "The owning blog (real intra-schema FK, RESTRICT — the empty-blog delete wall)."
+      website_id:
+        type: uuid
+        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
+        description: "The owning website (OWNED column — logical ref to website.websites(id); the (blog, post) invariant is a hand constraint trigger, not a related compute)."
+      title:
+        type: string
+        attributes: ["@required", "@max(200)"]
+        description: "Post title."
+      slug:
+        type: string
+        attributes: ["@required", "@max(120)", "@indexed"]
+        description: "Kebab slug, service-normalized, unique per blog among live rows (partial unique in the hardening migration). Mutable via PATCH, which records the redirect through the website surface."
+      content:
+        type: string?
+        description: "Post body HTML, stored verbatim — sanitization is the rendering layer's concern."
+      teaser:
+        type: string?
+        attributes: ["@max(500)"]
+        description: "Short excerpt (og:description)."
+      cover:
+        type: json?
+        description: "Structured cover `{image_url}` — a URL value, never the Odoo url('...')-wrapped string."
+      author_officer:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "Authoring officer — logical ref (no cross-schema FK)."
+      author_name:
+        type: string?
+        attributes: ["@max(120)"]
+        description: "Author display name — plain editable column."
+      is_published:
+        type: bool
+        attributes: ["@required", "@default(false)"]
+        description: "STORED publish state — writable ONLY through the publish/unpublish fence verbs; a PATCH carrying it refuses (typed blog_field_not_patchable, audit publish_refused)."
+      published_date:
+        type: datetime?
+        description: "Publish stamp, written by the same fence verbs. A pre-set FUTURE value survives the publish stamp (the lazy-schedule arm); unpublish retains it as history."
+      post_date:
+        type: datetime
+        attributes: ["@required", "@default(now)", "@indexed"]
+        description: "The publication date the lazy schedule keys on: every public read composes post_date <= now(); nothing ever fires. Officer data — patchable (the schedule is officer data)."
+      visits:
+        type: int
+        attributes: ["@required", "@default(0)", "@non_negative"]
+        description: "Visit counter — written ONLY by the visit verb's atomic self-increment; readonly-in-API; inflatable by design (a new token mints a new count)."
+      allow_comments:
+        type: bool
+        attributes: ["@required", "@default(false)"]
+        description: "The deferred-comments placeholder (comments land as a website intake declaration when the funnels arm)."
+      archived_at:
+        type: datetime?
+        description: "The retirement axis (NULL = live). Archive forces unpublish (one-way); unarchive restores liveness and NEVER re-publishes."
+      archived_by_blog_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The blog-archive cascade marker (logical self-ref): set by the blog-archive verb's single UPDATE, cleared by blog-unarchive — individually-archived posts never carry it."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      blog:
+        type: Blog
+        attributes: ["@one", "@foreign_key(blog_id)", "@restrict"]
+        description: "The owning blog"
+
+    indexes:
+      - type: index
+        fields: [blog_id, post_date]
+        description: "The per-blog listing read (keyset on post_date)"
+      - type: index
+        fields: [website_id, post_date]
+        description: "The site-scoped public listing read"
+      - type: index
+        fields: [visits]
+        description: "The Most Viewed order"

@@ -1,0 +1,87 @@
+[package]
+name = "backbone-blog"
+version = "0.1.0"
+edition = "2021"
+description = "The blog module (Odoo website blog port) — blogs/posts/tags at the company grain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# -----------------------------------------------------------------------------
+# Backbone Framework crates
+#
+# Pulled directly from the public framework repository so this module works
+# anywhere on disk without path fix-up. Pinned to the framework tag current
+# at module creation (single-rev policy: every framework source in the
+# resolved graph resolves to this one tag — no branch floats, no [patch]).
+# -----------------------------------------------------------------------------
+backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11", features = ["postgres"] }
+backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+# NOTE (recorded deviation from SPEC.md §7.1, forced by the pinned
+# generator): the schema generator's emitted event scaffolding
+# (src/domain/blog/*.rs — CrudEvent / CrudEventPublisher imports) does not
+# compile without this crate. The module itself stages NO outbox events,
+# subscribes to NONE (hooks index declares events: {}), owns no outbox
+# table, and the host's outbox_schemas set carries no blog entry — the
+# same zero-events-with-plumbing-dep posture as the website and events
+# modules.
+backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+
+# -----------------------------------------------------------------------------
+# THE ONE sibling module edge — backbone-website (the WB-3 redirect seam:
+# stale post/tag slug 301s are recorded and answered through the website
+# surface; the host binds websites to hosts). Tag-equal with the host pin,
+# single-resolve.
+# -----------------------------------------------------------------------------
+backbone-website = { git = "https://github.com/faridlab/backbone-website", tag = "v0.1.0" }
+
+# Sibling modules NOT consumed by design — recorded here so no later seat
+# adds them casually (SPEC.md §7.1):
+#  - backbone-mail: the publish-notify adapter is host-side (the module
+#    holds only the BlogNotifier port + the refusing default).
+#  - backbone-portal / backbone-events / backbone-livechat: no crate edge.
+#  - backbone-sapiens / backbone-party / corporate / geo: logical uuid
+#    references only (@exclude_from_foreign_key_check), never crate edges.
+
+# Core async runtime and serialization
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Database (PostgreSQL primary)
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate"] }
+
+# HTTP framework (Axum) — the module exports pure routers; the host mounts.
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Logging
+tracing = "0.1"
+
+# Validation / errors / config plumbing used by the generated tree
+validator = { version = "0.16", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+config = "0.14"
+serde_yaml = "0.9"
+
+# The Tier A capability tokens (ADR-0018): HMAC-SHA256 domain-separated by
+# purpose string, constant-time verified; the visit dedup view token mint.
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+subtle = "2.5"
+
+[dev-dependencies]
+tempfile = "3.0"
+tokio-test = "0.4"
+pretty_assertions = "1.0"
+futures = "0.3"
+tower = { version = "0.4", features = ["util"] }

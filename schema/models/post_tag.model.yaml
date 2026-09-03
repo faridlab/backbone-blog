@@ -1,0 +1,34 @@
+# =============================================================================
+# blog — the explicit post/tag join: PostTag.
+#
+# An EXPLICIT join model (not a generated M2M): the company fence rides
+# the join row itself, and the UNIQUE (post_id, tag_id) wall lives in the
+# hardening migration. Deleting a tag untags everywhere (one statement).
+# =============================================================================
+
+models:
+
+  - name: PostTag
+    collection: post_tags
+    description: "PostTag — the explicit join row between a post and a tag. The company fence rides the join."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
+      post_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Post.posts)", "@indexed"]
+        description: "The tagged post (real intra-schema FK, RESTRICT)."
+      tag_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Tag.tags)", "@indexed"]
+        description: "The applied tag (real intra-schema FK, RESTRICT — deleting a tag with links is a typed refusal handled by the tag delete verb's untag-everywhere statement)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"

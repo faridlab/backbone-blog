@@ -1,0 +1,103 @@
+# =============================================================================
+# blog — the audit vocabulary: BlogAuditLog (the website/events pattern).
+#
+# Append-only, service-emitted by the verbs. Rows are never updated, never
+# deleted by application code. The closed vocabulary carries every
+# security-relevant edge: publish refusals, the ONE publish event, notify
+# parks, and capability/throttle refusals land here as durable facts (a
+# refused write is still a fact). Carries its own company_id — the audit
+# trail is fenced like everything else (a deliberate tightening over the
+# events module's shared audit table).
+#
+# Deliberately ABSENT from the vocabulary:
+#  - `post_visited` — the visit counter + the receipt ledger ARE the
+#    trace; only refusals are audited (visit_throttled,
+#    capability_refused).
+#  - per-miss audit on uniform 404s — reads are not refused writes.
+# =============================================================================
+
+models:
+
+  - name: BlogAuditLog
+    collection: blog_audit_log
+    read_only: true
+    description: "Blog Audit Log — the durable verb trail. Append-only: every blog/post/tag create/patch, the ONE publish coupling event, unpublish, the archive/unarchive verbs (with cascade counts), tag redirects, notify parks, publish refusals, and visit/capability refusals land as one row with structured detail."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "The strict fence column — the audit row lands inside the verb's company scope."
+      event:
+        type: BlogAuditEvent
+        attributes: ["@required", "@indexed"]
+        description: "WHAT happened — the closed enum (one row shape per security-relevant edge)."
+      actor:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "WHO performed it — the acting officer (logical ref) or NULL for public/system edges."
+      subject_type:
+        type: string?
+        attributes: ["@max(120)"]
+        description: "The subject's entity kind ('blog', 'post', 'tag', 'capability')."
+      subject_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The subject's id, when the subject is a row."
+      detail:
+        type: json?
+        description: "Structured context (stamps, refusal reasons, cascade counts) — facts only."
+      occurred_at:
+        type: datetime
+        attributes: ["@required", "@default(now)"]
+        description: "When the edge happened."
+
+    indexes:
+      - type: index
+        fields: [event, occurred_at]
+        description: "The per-event-kind timeline read"
+
+enums:
+  - name: BlogAuditEvent
+    description: "The closed audit vocabulary — every verb edge, including refusals"
+    variants:
+      - name: blog_created
+        description: "A blog was created"
+        default: true
+      - name: blog_updated
+        description: "A blog was patched through the typed whitelist (or the patch was refused for the website move)"
+      - name: blog_archived
+        description: "The blog archive verb ran (single-UPDATE marker cascade; posts_cascade count in detail)"
+      - name: blog_unarchived
+        description: "The blog unarchive verb restored the blog and exactly the marker rows (posts_restored count in detail)"
+      - name: blog_delete_refused
+        description: "A blog delete was refused — posts exist (the RESTRICT wall surfaced as a typed 409)"
+      - name: post_created
+        description: "A post was created"
+      - name: post_updated
+        description: "A post was patched through the typed whitelist (a slug change records the redirect; detail carries it)"
+      - name: publish_refused
+        description: "A generic PATCH carried the fence pair (is_published/published_date) and was refused (the fence holds)"
+      - name: post_published
+        description: "THE ONE publish coupling event — the flip + stamp + notify landed in one transaction (detail carries the stamped published_date, whether a future value survived, and the actor)"
+      - name: notify_parked
+        description: "The notifier port refused; the publish verb still committed (the audit trail is the retry surface)"
+      - name: post_unpublished
+        description: "The unpublish fence verb flipped is_published to false (published_date retained as history)"
+      - name: post_archived
+        description: "The post archive verb ran (forced unpublish embedded; detail.forced_unpublish says whether the flip happened)"
+      - name: post_unarchived
+        description: "The post unarchive verb restored liveness (is_published stays false — the one-way rule)"
+      - name: tag_created
+        description: "A tag was created at the company grain"
+      - name: tag_updated
+        description: "A tag was renamed / re-categorized (the slug redirect recorded is in detail)"
+      - name: tag_deleted
+        description: "A tag was deleted (untag-everywhere in one statement; untagged count in detail)"
+      - name: visit_throttled
+        description: "A visit was refused by the fixed windows (the throttle held)"
+      - name: capability_refused
+        description: "The visit verb refused a token (bad/expired signature, uniform message) — the gate held"

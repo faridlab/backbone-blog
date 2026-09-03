@@ -1,0 +1,63 @@
+# =============================================================================
+# blog — the website-scoped blog container: Blog.
+#
+# PORT DECISIONS (source: docs/odoo/website/blog — the Odoo `website_blog`
+# addon, commit b9eb72eb):
+#  - `website_id` is an OWNED column here (the faithfulness note 1's second
+#    arm): the Odoo post's related-stored website_id becomes a real column
+#    on BOTH tables with a hand constraint trigger enforcing the
+#    (blog, post) invariant (see the hardening migration) — moving a post
+#    between blogs can never silently re-scope it. `blogs.website_id` is
+#    service-refused for change once any post exists (typed 422 — moving a
+#    blog between websites would silently re-scope its posts).
+#  - The Odoo `active` boolean retirement axis is declared as a TIMESTAMP
+#    (`archived_at`): NULL = live. Archiving a blog force-archives its
+#    posts (single-UPDATE cascade with the archived_by_blog_id marker) and
+#    forces unpublish; unarchive restores exactly the marker rows and
+#    never re-publishes (one-way rules).
+#  - Odoo's `subtitle` doubles as og:description/meta description; kept
+#    as one plain column (no compute).
+# =============================================================================
+
+models:
+
+  - name: Blog
+    collection: blogs
+    read_only: true
+    description: "Blog — the website-scoped container for posts. Read-only over HTTP: blogs are created, patched through the typed whitelist (website_id refused while posts exist), archived/unarchived (the marker cascade verbs), and deleted only when empty — through the typed verbs."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
+        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
+      website_id:
+        type: uuid
+        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
+        description: "The owning website — logical ref to website.websites(id) (cross-schema, indexed, no DB constraint). Service-immutable once any post exists."
+      name:
+        type: string
+        attributes: ["@required", "@max(120)"]
+        description: "Blog title."
+      subtitle:
+        type: string?
+        attributes: ["@max(500)"]
+        description: "Blog subtitle — doubles as description meta."
+      description:
+        type: string?
+        description: "Free-text description."
+      archived_at:
+        type: datetime?
+        description: "The retirement axis (NULL = live). The Odoo `active` boolean, declared as a timestamp; the archive/unarchive verbs are the only writers."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [website_id]
+        description: "The site-scoped public listing read"

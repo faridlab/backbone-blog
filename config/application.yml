@@ -1,0 +1,79 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  grpc_port: 50051
+database:
+  url: postgresql://root:password@localhost:5432/skeletondb
+  max_connections: 10
+  min_connections: 5
+  connect_timeout: 30
+  idle_timeout: 600
+logging:
+  level: info
+  format: json
+  file: logs/blog.log
+module:
+  name: blog
+  enabled: true
+features:
+  soft_delete: true
+  state_machines: false
+  workflows: false
+entities:
+  blog:
+    collection: blogs
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  post:
+    collection: posts
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  tag_category:
+    collection: tag_categories
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  tag:
+    collection: tags
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  post_tag:
+    collection: post_tags
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  post_view_receipt:
+    collection: post_view_receipts
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+  blog_audit_log:
+    collection: blog_audit_log
+    enabled: true
+    cache_ttl: 300
+    pagination:
+      default_limit: 20
+      max_limit: 100
+tracing:
+  enabled: true
+  exporter: otlp
+  endpoint: http://localhost:4317
+metrics:
+  enabled: true
+  endpoint: /metrics
+  port: 9090

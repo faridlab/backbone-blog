@@ -1,0 +1,116 @@
+# =============================================================================
+# blog Module - Schema Index
+# =============================================================================
+# Version: 1
+# Description: Module schema index. `module:`/`schema:` give this module its
+# OWN Postgres schema `blog` (migrations emit `CREATE SCHEMA blog` and
+# qualify tables as `blog.<table>`) — the convention every backbone module
+# follows. The CRATE is `backbone-blog` (plural) while the SCHEMA is `blog`
+# (singular, the upstream Odoo addon name) — the same crate-name/schema-name
+# relationship as backbone-events/`event` and backbone-website/`website`.
+# Host route base /api/v1/blog per the schema-name ruling.
+#
+# ENUM CENSUS DUTY: `blog_audit_event` is the module's ONLY enum type,
+# created UNQUALIFIED in `public` (the ratified family convention). The
+# name was census-checked against every module migration in the tree
+# before landing: backbone-events owns `event_audit_event`;
+# backbone-website owns `website_audit_event`; backbone-calendar owns the
+# four `event_*` enums of ITS event family. No `blog_*` enum stem exists
+# anywhere else in the tree — the census re-runs before the enum
+# migration lands (a collision would fail CREATE TYPE at migration time,
+# loudly).
+# =============================================================================
+
+module: blog
+version: 1
+schema: blog
+description: "blog — blogs, posts, tags and visit counting on one website: the one-transaction publish coupling (is_published flip + published_date stamp + one audit row + the notifier port), read-time lazy scheduled publish (post_date <= now, zero crons), company-grain tags whose slug redirects ride the website redirect layer, and session-deduped visits through a receipt ledger with no visitor rows (Odoo `website_blog` port, the website engine's first companion)"
+
+# =============================================================================
+# company_fence (ADR-0014): multi-tenant row-level-security posture
+# -----------------------------------------------------------------------------
+# Posture: strict — blog content is unambiguously company-owned (a website
+# belongs to a company, a blog to a website, a post to a blog). There is
+# no shared master data and no global/blank arm anywhere in this module.
+#
+# Posture map (entity -> realized fence, all under this one declaration):
+#   blogs, posts, tag_categories, tags, post_tags, post_view_receipts,
+#   blog_audit_log
+#                   -> strict (NOT NULL company_id; the generated policy
+#                      `company_id = NULLIF(current_setting('app.company_id',
+#                      true), '')::uuid` on both arms — no NULL escape
+#                      anywhere). The audit log is fenced too — a deliberate
+#                      tightening over the events module's shared audit
+#                      table, consistent with this module's strict posture.
+#
+# NOTE: `company_id` must NOT carry `@global` here — in the pinned
+# generator `@global` marks a company-SHARED (unfenced) column and would
+# silently emit NO policy for the table. Every company_id in this module
+# is the fence column, plain: `@required @indexed
+# @exclude_from_foreign_key_check` (a logical ref to
+# organization.companies — never a cross-schema FK).
+# -----------------------------------------------------------------------------
+company_fence: strict
+
+config:
+  database: postgresql
+  soft_delete: true          # metadata.deleted_at rides @audit_metadata as
+                             # family plumbing; the post/blog retirement
+                             # axis is the DECLARED archived_at column the
+                             # verbs own (nothing writes deleted_at at
+                             # this version)
+  audit: true
+  default_timestamps: true
+  generators:
+    disabled:
+      - graphql
+      - grpc
+      - proto
+
+# No sapiens edge exists in this module: officers authenticate through the
+# host's company_auth; the public tier is anonymous (the website binding +
+# the app.blog_tier GUC are its fence). Actor columns are logical refs by
+# construction (the backbone-website shape).
+
+# Shared value-object types available to all models in this module.
+shared_types:
+  Timestamps:
+    created_at:
+      type: datetime
+      attributes: ["@default(now)"]
+      description: "Record creation timestamp"
+    updated_at:
+      type: datetime
+      attributes: ["@updated_at"]
+      description: "Last update timestamp"
+    deleted_at:
+      type: datetime?
+      description: "Soft delete timestamp"
+
+  Actors:
+    # Plain nullable uuids — NO sapiens edge in this module (officers arrive
+    # through the host's company_auth; system edges are NULL).
+    created_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who created this record (logical ref — no cross-schema constraint)"
+    updated_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who last updated this record (logical ref)"
+    deleted_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who deleted this record (logical ref)"
+
+  Metadata: [Timestamps, Actors]
+
+# Import each entity model. Discovery is a recursive glob, but the list is
+# kept accurate for readers.
+imports:
+  - blog.model.yaml                   # Blog
+  - post.model.yaml                   # Post (the fence pair, lazy carrier, visits)
+  - tag.model.yaml                    # TagCategory, Tag (company grain)
+  - post_tag.model.yaml               # PostTag join (fenced)
+  - post_view_receipt.model.yaml      # PostViewReceipt (the dedup wall, not a visitor)
+  - blog_audit_log.model.yaml         # BlogAuditLog + BlogAuditEvent enum

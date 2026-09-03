@@ -1,0 +1,129 @@
+# Codegen policy for blog (crate backbone-blog).
+#
+# `user_owned` globs are hand-written files that live inside generator-owned
+# trees but are NOT schema-derived. `metaphor schema generate [--force]`
+# skips them wholesale (never reads, merges, or deletes them). Everything
+# else in src/ is regenerated from schema/models.
+#
+# Re-exports/declarations that must sit alongside generated code live inside
+# `// <<< CUSTOM ... // END CUSTOM` markers (application/service/
+# mod.rs, exports/services.rs) and are preserved by the marker mechanism,
+# not listed here. lib.rs is the one exception — see the freeze entry below.
+#
+# Declared BEFORE any file lands (the regen-safety contract): a landing
+# without the declaration is clobbered on the next regen; a declaration
+# without the file is the dangling class removed by review — later seats
+# extend this list on the same contract, declaring each hand file in the
+# same change that lands it.
+
+user_owned:
+
+  # ⚠ GENERATOR-DEFECT FREEZE (pinned generator only): the marker merge
+  # for `// <<< CUSTOM` blocks nested inside the builder constructor
+  # `BlogModuleBuilder::new()` is unreliable — the block initializing the
+  # two custom builder fields (publish_notifier, website_surface) survived
+  # some regens and was silently dropped by later ones (observed both in
+  # one sitting), leaving the crate at E0063. lib.rs is frozen at its
+  # generated state plus the seven preserved marker blocks (custom fields,
+  # builder methods, build() composition, exports). Regen skips it
+  # wholesale. Unlist ONLY after the generator honors marker blocks inside
+  # emitted constructor bodies deterministically; until then any schema
+  # change that alters the builder/module wiring must be hand-merged here.
+  - "src/lib.rs"
+
+  # The module's typed error surface (one enum, HTTP mappings) — shared by
+  # every hand service below.
+  - "src/application/service/blog_error.rs"
+
+  # Tier A capability tokens (the view-token family): HMAC-SHA256,
+  # purpose-separated ("blog-view-token", 180d), constant-time verify,
+  # fail-closed secret. The visit dedup identity — deliberately the only
+  # purpose at this version.
+  - "src/application/service/capability.rs"
+
+  # The public-tier scope binder: company GUC + the app.blog_tier
+  # transaction-local mark the restrictive visibility policies key on.
+  - "src/application/service/site_scope.rs"
+
+  # The publish-notify port + the refusing default (non-blocking posture:
+  # a refused notify WARNs + audits notify_parked and the publish verb
+  # still commits).
+  - "src/application/service/notifier_port.rs"
+
+  # Blog verbs: create/patch (website_id refused while posts exist),
+  # archive (single-UPDATE marker cascade)/unarchive (marker restore),
+  # guarded empty-blog delete.
+  - "src/application/service/blog_service.rs"
+
+  # Post verbs: create/patch whitelist (the fence pair refused), the ONE
+  # publish coupling transaction (flip + CASE stamp + ONE audit row +
+  # notifier), unpublish, the one-way archive pair, tag set.
+  - "src/application/service/post_service.rs"
+
+  # Tag verbs: company-grain guarded create/rename (redirect recorded)/
+  # delete (untag everywhere).
+  - "src/application/service/tag_service.rs"
+
+  # The visit verb: per-IP AND per-token fixed windows, token arm
+  # (verify/mint), the receipt + atomic increment + amortized prune flow.
+  - "src/application/service/visit_service.rs"
+
+  # The fence-composed public reads (listing keyset + tag filter + visits
+  # order + search, detail + wrap-around nav, tag cloud, admin state
+  # counts) — every query header-comments its fence arms.
+  - "src/application/service/public_query_service.rs"
+
+  # Hand repositories carrying the transactional SQL the services compose
+  # (services hold no raw sqlx — the DDD boundary). Every transactional
+  # method binds the company scope first; direct-pool statements go
+  # through the backbone-orm company_scope *_scoped helpers.
+  - "src/infrastructure/persistence/blog_command_repository.rs"
+  - "src/infrastructure/persistence/post_command_repository.rs"
+  - "src/infrastructure/persistence/tag_command_repository.rs"
+  - "src/infrastructure/persistence/visit_command_repository.rs"
+  - "src/infrastructure/persistence/public_query_repository.rs"
+
+  # The declared public read tree (the five-path allowlist) — mounted BARE
+  # of company_auth by the host; the site binding + tier fence + throttle
+  # are the gates.
+  - "src/presentation/http/public_routes.rs"
+
+  # The officer tree (blogs/posts/tags/tag-categories + the publish and
+  # archive verbs). The host mounts it behind company_auth with the
+  # module-write gate keyed "blog" as the innermost route layer.
+  - "src/presentation/http/admin_routes.rs"
+
+  # GENERATOR-DEFECT FREEZE (the events-module pattern): the pinned
+  # generator numbers migration files alphabetically by table name, which
+  # strands FK constraints AHEAD of the tables they reference (the
+  # referenced table's own migration file sorts later). In each frozen
+  # file the stranded FK is hand-removed and moved to the hardening
+  # migration, which runs after every table exists. Unlist ONLY after the
+  # generator learns dependency-ordered FK placement:
+  #  - post_tags -> posts (table file sorts later)
+  #  - post_tags -> tags (table file sorts later)
+  #  - post_view_receipts -> posts (table file sorts later)
+  - "migrations/*_create_post_tag_table.up.sql"
+  - "migrations/*_create_post_tag_table.down.sql"
+  - "migrations/*_create_post_view_receipt_table.up.sql"
+  - "migrations/*_create_post_view_receipt_table.down.sql"
+
+  # Hand-written DDL hardening: the (post.website_id = blog.website_id)
+  # invariant constraint trigger + the blog-move refusal, the two
+  # RESTRICTIVE public-tier visibility policies, the company-grain tag
+  # uniques, the post_tags join unique, the receipt dedup wall, the
+  # slug-reservation partial unique, the slug-shape/visits/window CHECKs,
+  # and the stranded-FK repairs above.
+  - "migrations/*hardening*"
+
+  # Hand-authored module documentation (operator + spec).
+  - "README.md"
+  - "SPEC.md"
+  - "docs/**"
+
+  # The fail-hard probe suite (fresh scratch DB on 5433,
+  # BLOG_TEST_ADMIN_URL override; a missing scratch Postgres panics the
+  # suite) — publish coupling, lazy visibility, tag grammar, visit dedup,
+  # the archive rules, the public fence allowlist, and the fenced-runtime
+  # RLS claims under a NOSUPERUSER NOBYPASSRLS probe role.
+  - "tests/**"

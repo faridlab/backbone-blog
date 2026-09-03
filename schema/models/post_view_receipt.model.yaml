@@ -1,0 +1,47 @@
+# =============================================================================
+# blog — the visit dedup wall: PostViewReceipt.
+#
+# THIS IS NOT A VISITOR ROW: no identity attributes, no IP, no user
+# agent, no geoip — the website VisitorEngine is deliberately NOT
+# consumed. A receipt is a TTL-bounded idempotence ledger: one counted
+# view per (post, view_token) per UTC day, pruned amortized inside the
+# visit transaction (no scheduler anywhere in the module). The unique
+# (post_id, view_token, window_start) IS the dedup wall (the hardening
+# migration); the counter itself is a single-statement atomic
+# `visits = visits + 1` on the post row (strictly stronger than a SKIP
+# LOCKED increment under contention — a self-incrementing row UPDATE
+# serializes at the row and cannot lose counts; the receipt wall already
+# excluded the duplicates).
+# =============================================================================
+
+models:
+
+  - name: PostViewReceipt
+    collection: post_view_receipts
+    read_only: true
+    description: "PostViewReceipt — one counted view per token per post per UTC day. Written only by the visit verb's INSERT .. ON CONFLICT DO NOTHING; never updated; pruned by the same transaction's amortized DELETE."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
+      post_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Post.posts)", "@indexed"]
+        description: "The visited post (real intra-schema FK, RESTRICT)."
+      view_token:
+        type: string
+        attributes: ["@required", "@max(64)"]
+        description: "The presented (or freshly minted) view token's nonce — the dedup identity arm, never a visitor profile."
+      window_start:
+        type: datetime
+        attributes: ["@required"]
+        description: "The UTC day bucket — date_trunc('day', now()) at insert; CHECK-shaped to the day boundary (the hardening migration)."
+      occurred_at:
+        type: datetime
+        attributes: ["@required", "@default(now)"]
+        description: "When the receipt landed."

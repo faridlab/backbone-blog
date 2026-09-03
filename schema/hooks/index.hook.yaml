@@ -1,0 +1,58 @@
+# blog Module - Hooks Index
+# Version: 1
+#
+# Module-level configuration for hooks (lifecycle behaviors): the
+# ZERO-cron read_time_lazy declaration and the ZERO-outbox-event
+# declaration.
+
+module: blog
+version: 1
+
+# =============================================================================
+# Module-level configuration
+# =============================================================================
+
+config:
+  audit:
+    retention_days: 365
+    critical_events:
+      - post_published          # the fence verb — the ONE publish coupling event
+      - post_unpublished        # the fence verb — publish state changed
+      - publish_refused         # a generic patch tried to write the fence pair
+      - blog_delete_refused     # the RESTRICT wall surfaced (durable fact)
+      - visit_throttled         # the fixed windows held
+      - capability_refused      # the visit token gate held
+
+  notifications:
+    email_enabled: false
+    sms_enabled: false
+    push_enabled: false
+
+# =============================================================================
+# Shared domain events
+# =============================================================================
+# ZERO event-owned outbox events by design. The module owns NO outbox table
+# and the host's outbox_schemas producer set carries NO blog entry (absence
+# is the truthful posture — adding a producer requires a real consumer + an
+# outbox_schemas decision in the same change):
+#  - the publish-coupling "notify the parent blog" arm rides the
+#    host-installed BlogNotifier port (the default parks loudly in the
+#    audit trail as notify_parked; the verb still commits);
+#  - tag slug redirects ride backbone-website's redirect surface
+#    (WebsiteSurface::record_redirect) — a direct call inside the verb
+#    transaction, not a domain event.
+events: {}
+
+# =============================================================================
+# Scheduled jobs — ZERO (the read_time_lazy posture)
+# =============================================================================
+# The module owns NO clock. Scheduled publication is READ-TIME LAZY: a
+# future post_date on a published post is the ONLY scheduling mechanism,
+# and every public read composes `post_date <= now()` (DB-enforced through
+# the public-tier RLS policy). Nothing ever "fires"; no cron flips
+# is_published; no sweeper transitions state. The visit-receipt prune is
+# amortized INSIDE the visit verb's transaction (a bounded DELETE), never
+# a scheduled sweep. Adding ANY scheduled job to this module reverses the
+# register decision — it requires reopening the row, not a convenience
+# cron.
+scheduled_jobs: {}
