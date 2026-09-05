@@ -250,7 +250,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-blog"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -479,7 +479,7 @@ dependencies = [
 [[package]]
 name = "backbone-website"
 version = "0.1.0"
-source = "git+https://github.com/faridlab/backbone-website?tag=v0.1.0#c2d9e4fc87c18046b511a92f7d9887fcd8eed308"
+source = "git+https://github.com/faridlab/backbone-website?tag=v0.2.0#e5f3510296238a1cbd268987a0baea0a15956e0c"
 dependencies = [
  "anyhow",
  "async-trait",
