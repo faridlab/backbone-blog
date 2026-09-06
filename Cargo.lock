@@ -478,8 +478,8 @@ dependencies = [
 
 [[package]]
 name = "backbone-website"
-version = "0.1.0"
-source = "git+https://github.com/faridlab/backbone-website?tag=v0.2.0#e5f3510296238a1cbd268987a0baea0a15956e0c"
+version = "0.3.0"
+source = "git+https://github.com/faridlab/backbone-website?tag=v0.3.0#7ac21fa2b69262fd88b3162a8af3c459d305dd9e"
 dependencies = [
  "anyhow",
  "async-trait",

@@ -36,7 +36,7 @@ backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", t
 # surface; the host binds websites to hosts). Tag-equal with the host pin,
 # single-resolve.
 # -----------------------------------------------------------------------------
-backbone-website = { git = "https://github.com/faridlab/backbone-website", tag = "v0.2.0" }
+backbone-website = { git = "https://github.com/faridlab/backbone-website", tag = "v0.3.0" }
 
 # Sibling modules NOT consumed by design — recorded here so no later seat
 # adds them casually (SPEC.md §7.1):
