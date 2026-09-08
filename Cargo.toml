@@ -16,10 +16,10 @@ path = "src/lib.rs"
 # at module creation (single-rev policy: every framework source in the
 # resolved graph resolves to this one tag — no branch floats, no [patch]).
 # -----------------------------------------------------------------------------
-backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.15", features = ["postgres"] }
-backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.15" }
-backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.15" }
-backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.15" }
+backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16", features = ["postgres"] }
+backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
+backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
 # NOTE (recorded deviation from SPEC.md §7.1, forced by the pinned
 # generator): the schema generator's emitted event scaffolding
 # (src/domain/blog/*.rs — CrudEvent / CrudEventPublisher imports) does not
@@ -28,7 +28,7 @@ backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", 
 # table, and the host's outbox_schemas set carries no blog entry — the
 # same zero-events-with-plumbing-dep posture as the website and events
 # modules.
-backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.15" }
+backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
 
 # -----------------------------------------------------------------------------
 # THE ONE sibling module edge — backbone-website (the WB-3 redirect seam:
@@ -36,7 +36,7 @@ backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", t
 # surface; the host binds websites to hosts). Tag-equal with the host pin,
 # single-resolve.
 # -----------------------------------------------------------------------------
-backbone-website = { git = "https://github.com/faridlab/backbone-website", tag = "v0.3.1" }
+backbone-website = { git = "https://github.com/faridlab/backbone-website", tag = "v0.3.2" }
 
 # Sibling modules NOT consumed by design — recorded here so no later seat
 # adds them casually (SPEC.md §7.1):
