@@ -1,8 +1,8 @@
 [package]
 name = "backbone-blog"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
-description = "The blog module (Odoo website blog port) — blogs/posts/tags at the company grain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
+description = "The blog module (Odoo website blog port) — blogs/posts/tags as a tenant-agnostic content domain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
 
 [lib]
 path = "src/lib.rs"
@@ -18,7 +18,10 @@ path = "src/lib.rs"
 # -----------------------------------------------------------------------------
 backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17", features = ["postgres"] }
 backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
-backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
+# `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
+# the identity extractor the guarded admin tree consumes (the composing host's
+# org middleware inserts it), same as backbone-calendar / backbone-attendance.
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17", features = ["axum"] }
 backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
 # NOTE (recorded deviation from SPEC.md §7.1, forced by the pinned
 # generator): the schema generator's emitted event scaffolding
@@ -29,6 +32,11 @@ backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", 
 # same zero-events-with-plumbing-dep posture as the website and events
 # modules.
 backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
+
+# OpenAPI schema derive. The schema generator emits ungated `use utoipa::ToSchema;`
+# in every entity and DTO file, so the dep is unconditional even though the
+# `derive(ToSchema)` itself is feature-gated to `openapi`.
+utoipa = { version = "5", features = ["chrono", "uuid"] }
 
 # -----------------------------------------------------------------------------
 # THE ONE sibling module edge — backbone-website (the WB-3 redirect seam:
