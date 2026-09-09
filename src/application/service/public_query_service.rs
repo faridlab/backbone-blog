@@ -15,10 +15,9 @@
 //!   `/public/blogs/{blog_slug}/posts/{old}` →
 //!   `/public/blogs/{blog_slug}/posts/{new}` (moved_301). The detail
 //!   handler asks the seam with the same shape.
-//! - Tag slug redirects are company-grain (no single blog path
-//!   exists), so they use the module-relative `/tags/{old}` →
-//!   `/tags/{new}` (moved_301); the listing's tag filter asks the
-//!   seam with that shape on a miss.
+//! - Tag slug redirects are module-relative (no single blog path
+//!   exists): `/tags/{old}` → `/tags/{new}` (moved_301); the
+//!   listing's tag filter asks the seam with that shape on a miss.
 //!
 //! Multi-tag GET rule (SPEC 4.4): more than one tag in the
 //! comma-joined `?tag=` → 302 to the first tag's canonical listing
@@ -30,7 +29,6 @@ use std::sync::Arc;
 use serde_json::{json, Value as Json};
 use uuid::Uuid;
 
-use backbone_orm::company_scope::with_company_scope;
 use backbone_website::exports::WebsiteSurface;
 
 use crate::infrastructure::persistence::public_query_repository::{
@@ -96,10 +94,7 @@ impl PublicQueryService {
     /// The website's live blogs (public tier).
     pub async fn blogs(&self, host: &str) -> BlogResult<PublicBlogsAnswer> {
         let website = self.resolve_website(host).await?;
-        let blogs = self
-            .queries
-            .list_blogs(website.company_id, website.id)
-            .await?;
+        let blogs = self.queries.list_blogs(website.id).await?;
         Ok(PublicBlogsAnswer {
             host_binding: website,
             blogs,
@@ -118,10 +113,7 @@ impl PublicQueryService {
         search: Option<&str>,
     ) -> BlogResult<ListingAnswer> {
         let website = self.resolve_website(host).await?;
-        let blogs = self
-            .queries
-            .list_blogs(website.company_id, website.id)
-            .await?;
+        let blogs = self.queries.list_blogs(website.id).await?;
         let blog = derive_blog(&blogs, blog_slug)?;
 
         let mut tag_slug = None;
@@ -136,10 +128,7 @@ impl PublicQueryService {
                 return Err(BlogError::InvalidInput("empty tag filter".to_string()));
             }
             // Scoped resolution (D8): lookup, never trust.
-            let (found, missed) = with_company_scope(Some(website.company_id), async {
-                self.tags.resolve_many(&asked).await
-            })
-            .await?;
+            let (found, missed) = self.tags.resolve_many(&asked).await?;
             let mut canonical: Vec<String> = found.iter().map(|t| t.slug.clone()).collect();
             for stale in &missed {
                 // The seam, ONCE per stale member.
@@ -178,7 +167,6 @@ impl PublicQueryService {
         let page = self
             .queries
             .listing(
-                website.company_id,
                 website.id,
                 blog.id,
                 &crate::infrastructure::persistence::public_query_repository::ListingQuery {
@@ -201,15 +189,9 @@ impl PublicQueryService {
         post_slug: &str,
     ) -> BlogResult<DetailAnswer> {
         let website = self.resolve_website(host).await?;
-        let blogs = self
-            .queries
-            .list_blogs(website.company_id, website.id)
-            .await?;
+        let blogs = self.queries.list_blogs(website.id).await?;
         let blog = derive_blog(&blogs, blog_slug)?;
-        match self
-            .queries
-            .detail(website.company_id, website.id, blog.id, post_slug)
-            .await?
+        match self.queries.detail(website.id, blog.id, post_slug).await?
         {
             Some(mut detail) => {
                 let og = og_meta(blog_slug, &detail);
@@ -246,19 +228,16 @@ impl PublicQueryService {
         min_limit: i64,
     ) -> BlogResult<Vec<CloudEntry>> {
         let website = self.resolve_website(host).await?;
-        let blogs = self
-            .queries
-            .list_blogs(website.company_id, website.id)
-            .await?;
+        let blogs = self.queries.list_blogs(website.id).await?;
         let blog = derive_blog(&blogs, blog_slug)?;
         self.queries
-            .cloud_public(website.company_id, website.id, blog.id, min_limit)
+            .cloud_public(website.id, blog.id, min_limit)
             .await
     }
 }
 
 /// The blogs answer: the host binding (the caller may need the
-/// company) plus the live blogs.
+/// website row) plus the live blogs.
 #[derive(Debug)]
 pub struct PublicBlogsAnswer {
     pub host_binding: backbone_website::exports::WebsiteView,
@@ -317,8 +296,8 @@ pub async fn record_post_slug_redirect(
     }
 }
 
-/// The tag-redirect recorder (module-relative shape — tags are
-/// company-grain; see the module doc).
+/// The tag-redirect recorder (module-relative shape; see the module
+/// doc).
 pub async fn record_tag_slug_redirect(
     surface: &dyn WebsiteSurface,
     website_id: Uuid,

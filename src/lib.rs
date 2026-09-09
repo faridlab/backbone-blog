@@ -157,8 +157,8 @@ impl BlogModule {
     // <<< CUSTOM METHODS
     /// The officer tree (the full verb table — see
     /// `presentation/http/admin_routes.rs`). The host nests it behind
-    /// `company_auth` under the schema name; the module does not
-    /// self-mount.
+    /// its org session guard under the schema name; the module does
+    /// not self-mount.
     pub fn admin_routes(&self) -> axum::Router {
         crate::presentation::http::blog_admin_routes(
             crate::presentation::http::BlogAdminState::from_parts(

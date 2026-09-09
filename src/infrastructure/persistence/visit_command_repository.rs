@@ -2,8 +2,9 @@
 //! `metaphor.codegen.yaml`) — the ONE owner of the visit flow's SQL
 //! (SPEC section 4.5).
 //!
-//! ONE transaction, opened at the PUBLIC tier (company + tier GUCs —
-//! the fence is the visibility guard), in order:
+//! ONE transaction, opened at the PUBLIC tier (the ambient org scope
+//! relayed onto the transaction + the tier mark — the fence is the
+//! visibility guard), in order:
 //!
 //!  1. Resolve the post by slug + website under the public fence
 //!     (a miss is the uniform 404 — and because the whole flow rolls
@@ -28,6 +29,7 @@
 
 use sqlx::PgPool;
 use uuid::Uuid;
+use super::scoped_read;
 
 use crate::application::service::blog_error::{BlogError, BlogResult};
 use crate::application::service::site_scope::bind_public_scope;
@@ -62,13 +64,12 @@ impl VisitCommandRepository {
     /// visitor profile.
     pub async fn visit(
         &self,
-        company: Uuid,
         website_id: Uuid,
         post_slug: &str,
         view_token: &str,
     ) -> BlogResult<VisitOutcome> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
+        bind_public_scope(&mut tx).await?;
 
         // 1. Resolve under the public fence (scoped lookup, D8; the
         //    uniform miss rolls the whole flow back — no receipt
@@ -91,11 +92,10 @@ impl VisitCommandRepository {
         // 2. The dedup wall.
         let inserted = sqlx::query(
             "INSERT INTO blog.post_view_receipts
-                 (id, company_id, post_id, view_token, window_start, occurred_at)
-             VALUES (gen_random_uuid(), $1, $2, $3, date_trunc('day', now()), now())
+                 (id, post_id, view_token, window_start, occurred_at)
+             VALUES (gen_random_uuid(), $1, $2, date_trunc('day', now()), now())
              ON CONFLICT (post_id, view_token, window_start) DO NOTHING",
         )
-        .bind(company)
         .bind(post_id)
         .bind(view_token)
         .execute(&mut *tx)
@@ -164,7 +164,7 @@ impl VisitCommandRepository {
 
     /// The receipts-per-day census (probe support; not a route).
     pub async fn receipt_count(&self, post_id: Uuid) -> BlogResult<i64> {
-        let count = backbone_orm::company_scope::fetch_optional_scalar_scoped(
+        let count = scoped_read::fetch_optional_scalar(
             &self.pool,
             sqlx::query_scalar::<_, i64>(
                 "SELECT count(*) FROM blog.post_view_receipts WHERE post_id = $1",
@@ -182,16 +182,13 @@ impl VisitCommandRepository {
     /// service calls this, the pool stays here.
     pub async fn audit_refusal(
         &self,
-        company: Uuid,
         event: &str,
         detail: serde_json::Value,
     ) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
-        super::blog_command_repository::record_audit(
-            &mut tx, company, event, None, "post", None, detail,
-        )
-        .await?;
+        bind_public_scope(&mut tx).await?;
+        super::blog_command_repository::record_audit(&mut tx, event, None, "post", None, detail)
+            .await?;
         tx.commit().await?;
         Ok(())
     }

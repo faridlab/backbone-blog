@@ -39,10 +39,6 @@ models:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique record id"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
-        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
       blog_id:
         type: uuid
         attributes: ["@required", "@foreign_key(Blog.blogs)", "@indexed"]

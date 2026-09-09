@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Post;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,22 +32,10 @@ use crate::domain::entity::Post;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreatePostDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "blog_id")]
     pub blog_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "website_id")]
     pub website_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
@@ -63,27 +51,15 @@ pub struct CreatePostDto {
     pub teaser: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cover: Option<serde_json::Value>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "author_officer"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "author_officer")]
     pub author_officer: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "author_name"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "author_name")]
     pub author_name: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_published")]
     pub is_published: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "published_date"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "published_date")]
     pub published_date: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "post_date")]
@@ -93,17 +69,9 @@ pub struct CreatePostDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "allow_comments")]
     pub allow_comments: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_at")]
     pub archived_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_by_blog_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_by_blog_id")]
     pub archived_by_blog_id: Option<Uuid>,
 }
 
@@ -120,22 +88,10 @@ pub struct CreatePostDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatePostDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "blog_id")]
     pub blog_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "website_id")]
     pub website_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
@@ -151,27 +107,15 @@ pub struct UpdatePostDto {
     pub teaser: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cover: Option<serde_json::Value>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "author_officer"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "author_officer")]
     pub author_officer: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "author_name"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "author_name")]
     pub author_name: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_published")]
     pub is_published: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "published_date"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "published_date")]
     pub published_date: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "post_date")]
@@ -181,17 +125,9 @@ pub struct UpdatePostDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "allow_comments")]
     pub allow_comments: bool,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_at")]
     pub archived_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_by_blog_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_by_blog_id")]
     pub archived_by_blog_id: Option<Uuid>,
 }
 
@@ -208,22 +144,10 @@ pub struct UpdatePostDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchPostDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "blog_id")]
     pub blog_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "website_id")]
     pub website_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
@@ -269,23 +193,7 @@ pub struct PatchPostDto {
 impl PatchPostDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some()
-            || self.blog_id.is_some()
-            || self.website_id.is_some()
-            || self.title.is_some()
-            || self.slug.is_some()
-            || self.content.is_some()
-            || self.teaser.is_some()
-            || self.cover.is_some()
-            || self.author_officer.is_some()
-            || self.author_name.is_some()
-            || self.is_published.is_some()
-            || self.published_date.is_some()
-            || self.post_date.is_some()
-            || self.visits.is_some()
-            || self.allow_comments.is_some()
-            || self.archived_at.is_some()
-            || self.archived_by_blog_id.is_some()
+        self.blog_id.is_some() || self.website_id.is_some() || self.title.is_some() || self.slug.is_some() || self.content.is_some() || self.teaser.is_some() || self.cover.is_some() || self.author_officer.is_some() || self.author_name.is_some() || self.is_published.is_some() || self.published_date.is_some() || self.post_date.is_some() || self.visits.is_some() || self.allow_comments.is_some() || self.archived_at.is_some() || self.archived_by_blog_id.is_some()
     }
 }
 
@@ -301,25 +209,11 @@ impl PatchPostDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PostResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub blog_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub website_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub title: String,
@@ -398,9 +292,9 @@ impl PostListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct PostSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub blog_id: Uuid,
     pub website_id: Uuid,
+    pub title: String,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -412,7 +306,6 @@ impl From<Post> for PostResponseDto {
     fn from(entity: Post) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             blog_id: entity.blog_id,
             website_id: entity.website_id,
             title: entity.title,
@@ -439,9 +332,9 @@ impl From<Post> for PostSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             blog_id: entity.blog_id,
             website_id: entity.website_id,
+            title: entity.title,
             created_at,
         }
     }
@@ -451,7 +344,6 @@ impl From<CreatePostDto> for Post {
     fn from(dto: CreatePostDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             blog_id: dto.blog_id,
             website_id: dto.website_id,
             title: dto.title,
@@ -477,7 +369,6 @@ impl From<&Post> for PostResponseDto {
     fn from(entity: &Post) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             blog_id: entity.blog_id.clone(),
             website_id: entity.website_id.clone(),
             title: entity.title.clone(),
@@ -507,7 +398,6 @@ impl backbone_core::FromCreateDto<CreatePostDto> for Post {
 
 impl backbone_core::ApplyUpdateDto<UpdatePostDto> for Post {
     fn apply_update(mut self, dto: UpdatePostDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.blog_id = dto.blog_id;
         self.website_id = dto.website_id;
         self.title = dto.title;

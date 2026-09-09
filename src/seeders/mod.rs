@@ -9,16 +9,16 @@ use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-mod blog_audit_log_seeder;
 mod blog_seeder;
+mod blog_audit_log_seeder;
 mod post_seeder;
 mod post_tag_seeder;
 mod post_view_receipt_seeder;
 mod tag_category_seeder;
 mod tag_seeder;
 
-pub use blog_audit_log_seeder::SeedBlogAuditLogSeeder;
 pub use blog_seeder::SeedBlogSeeder;
+pub use blog_audit_log_seeder::SeedBlogAuditLogSeeder;
 pub use post_seeder::SeedPostSeeder;
 pub use post_tag_seeder::SeedPostTagSeeder;
 pub use post_view_receipt_seeder::SeedPostViewReceiptSeeder;

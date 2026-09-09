@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Tag;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,23 +32,13 @@ use crate::domain::entity::Tag;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub slug: String,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "category_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "category_id")]
     pub category_id: Option<Uuid>,
 }
 
@@ -65,23 +55,13 @@ pub struct CreateTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub slug: String,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "category_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "category_id")]
     pub category_id: Option<Uuid>,
 }
 
@@ -98,12 +78,6 @@ pub struct UpdateTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,10 +93,7 @@ pub struct PatchTagDto {
 impl PatchTagDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some()
-            || self.name.is_some()
-            || self.slug.is_some()
-            || self.category_id.is_some()
+        self.name.is_some() || self.slug.is_some() || self.category_id.is_some()
     }
 }
 
@@ -138,16 +109,8 @@ impl PatchTagDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct TagResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
@@ -210,9 +173,9 @@ impl TagListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct TagSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
     pub slug: String,
+    pub category_id: Option<Uuid>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -224,7 +187,6 @@ impl From<Tag> for TagResponseDto {
     fn from(entity: Tag) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             slug: entity.slug,
             category_id: entity.category_id,
@@ -238,9 +200,9 @@ impl From<Tag> for TagSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             slug: entity.slug,
+            category_id: entity.category_id,
             created_at,
         }
     }
@@ -250,7 +212,6 @@ impl From<CreateTagDto> for Tag {
     fn from(dto: CreateTagDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             name: dto.name,
             slug: dto.slug,
             category_id: dto.category_id,
@@ -263,7 +224,6 @@ impl From<&Tag> for TagResponseDto {
     fn from(entity: &Tag) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             name: entity.name.clone(),
             slug: entity.slug.clone(),
             category_id: entity.category_id.clone(),
@@ -280,7 +240,6 @@ impl backbone_core::FromCreateDto<CreateTagDto> for Tag {
 
 impl backbone_core::ApplyUpdateDto<UpdateTagDto> for Tag {
     fn apply_update(mut self, dto: UpdateTagDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.name = dto.name;
         self.slug = dto.slug;
         self.category_id = dto.category_id;

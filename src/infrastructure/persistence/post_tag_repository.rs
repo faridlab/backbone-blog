@@ -23,9 +23,7 @@ pub struct PostTagRepository(
 
 impl std::ops::Deref for PostTagRepository {
     type Target = backbone_orm::GenericCrudRepository<PostTag, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl PostTagRepository {

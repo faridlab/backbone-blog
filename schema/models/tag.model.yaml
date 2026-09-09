@@ -3,18 +3,19 @@
 #
 # PORT DECISION (source: docs/odoo/website/blog — the Odoo global
 # unique(name) is the addon's only 2 SQL constraints):
-#  - Tag uniqueness grain is THE COMPANY, not the world. A global unique
-#    is both a cross-tenant existence oracle (a 409 reveals someone
-#    else's company has the tag) and a collision blocker (two tenants
-#    cannot both have "News"). The hardening migration walls
-#    UNIQUE (company_id, lower(name)) and UNIQUE (company_id, slug).
-#    Within one company the vocabulary is shared across that company's
-#    blogs and websites (the Odoo shared-vocabulary semantics, corrected
-#    only at the tenancy seam). Per-website disjoint vocabularies are a
-#    recorded reopening (an additive migration + an owner decision), not
-#    a default.
-#  - Tags attach to posts through the EXPLICIT PostTag join model (the
-#    fence rides the join row).
+#  - Tag uniqueness grain is the composing deployment's tenancy decision,
+#    not the module's. A bare global unique would be a cross-tenant
+#    existence oracle (a 409 reveals someone else's tenant has the tag)
+#    and a collision blocker (two tenants cannot both have "News"), so
+#    the module ships NO name/slug wall of its own; a composing
+#    backend-service that org-scopes these tables declares the per-unit
+#    UNIQUE (org_unit_id, lower(name)) / UNIQUE (org_unit_id, slug) walls
+#    in its tenancy decorator. Within one unit the vocabulary is shared
+#    across that unit's blogs and websites (the Odoo shared-vocabulary
+#    semantics, corrected only at the tenancy seam). Per-website
+#    disjoint vocabularies are a recorded reopening (an additive
+#    migration + an owner decision), not a default.
+#  - Tags attach to posts through the EXPLICIT PostTag join model.
 #  - No color machinery (the Odoo random-color compute is not in the blog
 #    cohort).
 # =============================================================================
@@ -23,16 +24,12 @@ models:
 
   - name: TagCategory
     collection: tag_categories
-    description: "Tag Category — the grouping row for blog tags. Company-owned master data."
+    description: "Tag Category — the grouping row for blog tags. Module-local master data."
     fields:
       id:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique record id"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
-        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
       name:
         type: string
         attributes: ["@required", "@max(120)"]
@@ -44,24 +41,20 @@ models:
 
   - name: Tag
     collection: tags
-    description: "Tag — a company-grain vocabulary label optionally grouped under a category. Renames derive a new slug and record the redirect through the website surface."
+    description: "Tag — a vocabulary label optionally grouped under a category. Renames derive a new slug and record the redirect through the website surface."
     fields:
       id:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique record id"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@indexed", "@exclude_from_foreign_key_check"]
-        description: "The strict fence column — logical ref to organization.companies(id), never a cross-schema FK."
       name:
         type: string
         attributes: ["@required", "@max(120)"]
-        description: "Tag label. Unique per company case-folded (the hardening wall)."
+        description: "Tag label. Unique case-folded within the composing deployment's tenancy unit (the decorator's wall)."
       slug:
         type: string
         attributes: ["@required", "@max(120)"]
-        description: "Kebab slug, service-derived from the name, unique per company (the hardening wall)."
+        description: "Kebab slug, service-derived from the name, unique within the composing deployment's tenancy unit (the decorator's wall)."
       category_id:
         type: uuid?
         attributes: ["@foreign_key(TagCategory.tag_categories)", "@indexed"]

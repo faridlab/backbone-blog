@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for Post
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct PostId(pub Uuid);
 
 impl PostId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for PostId {
@@ -35,34 +29,25 @@ impl std::str::FromStr for PostId {
 }
 
 impl From<Uuid> for PostId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<PostId> for Uuid {
-    fn from(id: PostId) -> Self {
-        id.0
-    }
+    fn from(id: PostId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for PostId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for PostId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Post {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub blog_id: Uuid,
     pub website_id: Uuid,
     pub title: String,
@@ -91,20 +76,9 @@ impl Post {
     }
 
     /// Create a new Post with required fields
-    pub fn new(
-        company_id: Uuid,
-        blog_id: Uuid,
-        website_id: Uuid,
-        title: String,
-        slug: String,
-        is_published: bool,
-        post_date: DateTime<Utc>,
-        visits: i32,
-        allow_comments: bool,
-    ) -> Self {
+    pub fn new(blog_id: Uuid, website_id: Uuid, title: String, slug: String, is_published: bool, post_date: DateTime<Utc>, visits: i32, allow_comments: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             blog_id,
             website_id,
             title,
@@ -175,6 +149,7 @@ impl Post {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -235,90 +210,53 @@ impl Post {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
-                }
                 "blog_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.blog_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.blog_id = v; }
                 }
                 "website_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.website_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.website_id = v; }
                 }
                 "title" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.title = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.title = v; }
                 }
                 "slug" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.slug = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.slug = v; }
                 }
                 "content" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.content = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.content = v; }
                 }
                 "teaser" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.teaser = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.teaser = v; }
                 }
                 "cover" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.cover = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.cover = v; }
                 }
                 "author_officer" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.author_officer = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.author_officer = v; }
                 }
                 "author_name" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.author_name = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.author_name = v; }
                 }
                 "is_published" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.is_published = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.is_published = v; }
                 }
                 "published_date" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.published_date = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.published_date = v; }
                 }
                 "post_date" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.post_date = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.post_date = v; }
                 }
                 "visits" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visits = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visits = v; }
                 }
                 "allow_comments" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.allow_comments = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.allow_comments = v; }
                 }
                 "archived_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.archived_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.archived_at = v; }
                 }
                 "archived_by_blog_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.archived_by_blog_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.archived_by_blog_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -374,7 +312,6 @@ impl backbone_orm::EntityRepoMeta for Post {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("blog_id".to_string(), "uuid".to_string());
         m.insert("website_id".to_string(), "uuid".to_string());
         m.insert("archived_by_blog_id".to_string(), "uuid".to_string());
@@ -382,9 +319,6 @@ impl backbone_orm::EntityRepoMeta for Post {
     }
     fn search_fields() -> &'static [&'static str] {
         &["title", "slug"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("blog", "blogs", "blogId")]
@@ -397,7 +331,6 @@ impl backbone_orm::EntityRepoMeta for Post {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct PostBuilder {
-    company_id: Option<Uuid>,
     blog_id: Option<Uuid>,
     website_id: Option<Uuid>,
     title: Option<String>,
@@ -417,12 +350,6 @@ pub struct PostBuilder {
 }
 
 impl PostBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the blog_id field (required)
     pub fn blog_id(mut self, value: Uuid) -> Self {
         self.blog_id = Some(value);
@@ -523,21 +450,13 @@ impl PostBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Post, String> {
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
-        let blog_id = self
-            .blog_id
-            .ok_or_else(|| "blog_id is required".to_string())?;
-        let website_id = self
-            .website_id
-            .ok_or_else(|| "website_id is required".to_string())?;
+        let blog_id = self.blog_id.ok_or_else(|| "blog_id is required".to_string())?;
+        let website_id = self.website_id.ok_or_else(|| "website_id is required".to_string())?;
         let title = self.title.ok_or_else(|| "title is required".to_string())?;
         let slug = self.slug.ok_or_else(|| "slug is required".to_string())?;
 
         Ok(Post {
             id: Uuid::new_v4(),
-            company_id,
             blog_id,
             website_id,
             title,

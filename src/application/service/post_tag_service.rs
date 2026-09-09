@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreatePostTagDto, UpdatePostTagDto};
 use crate::domain::entity::PostTag;
 use crate::infrastructure::persistence::PostTagRepository;
-use crate::presentation::dto::{CreatePostTagDto, UpdatePostTagDto};
 
 /// Application service for PostTag entities.
 ///
@@ -25,8 +25,12 @@ use crate::presentation::dto::{CreatePostTagDto, UpdatePostTagDto};
 ///     // add domain-specific dependencies here
 /// }
 /// ```
-pub type PostTagService =
-    GenericCrudService<PostTag, CreatePostTagDto, UpdatePostTagDto, PostTagRepository>;
+pub type PostTagService = GenericCrudService<
+    PostTag,
+    CreatePostTagDto,
+    UpdatePostTagDto,
+    PostTagRepository,
+>;
 
 // <<< CUSTOM
 // END CUSTOM

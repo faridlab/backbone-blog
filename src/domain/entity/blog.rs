@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for Blog
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct BlogId(pub Uuid);
 
 impl BlogId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for BlogId {
@@ -35,34 +29,25 @@ impl std::str::FromStr for BlogId {
 }
 
 impl From<Uuid> for BlogId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<BlogId> for Uuid {
-    fn from(id: BlogId) -> Self {
-        id.0
-    }
+    fn from(id: BlogId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for BlogId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for BlogId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Blog {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub website_id: Uuid,
     pub name: String,
     pub subtitle: Option<String>,
@@ -80,10 +65,9 @@ impl Blog {
     }
 
     /// Create a new Blog with required fields
-    pub fn new(company_id: Uuid, website_id: Uuid, name: String) -> Self {
+    pub fn new(website_id: Uuid, name: String) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             website_id,
             name,
             subtitle: None,
@@ -143,6 +127,7 @@ impl Blog {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -173,35 +158,20 @@ impl Blog {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
-                }
                 "website_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.website_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.website_id = v; }
                 }
                 "name" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.name = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.name = v; }
                 }
                 "subtitle" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subtitle = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subtitle = v; }
                 }
                 "description" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.description = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.description = v; }
                 }
                 "archived_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.archived_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.archived_at = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -257,15 +227,11 @@ impl backbone_orm::EntityRepoMeta for Blog {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("website_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["name"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -275,7 +241,6 @@ impl backbone_orm::EntityRepoMeta for Blog {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct BlogBuilder {
-    company_id: Option<Uuid>,
     website_id: Option<Uuid>,
     name: Option<String>,
     subtitle: Option<String>,
@@ -284,12 +249,6 @@ pub struct BlogBuilder {
 }
 
 impl BlogBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the website_id field (required)
     pub fn website_id(mut self, value: Uuid) -> Self {
         self.website_id = Some(value);
@@ -324,17 +283,11 @@ impl BlogBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Blog, String> {
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
-        let website_id = self
-            .website_id
-            .ok_or_else(|| "website_id is required".to_string())?;
+        let website_id = self.website_id.ok_or_else(|| "website_id is required".to_string())?;
         let name = self.name.ok_or_else(|| "name is required".to_string())?;
 
         Ok(Blog {
             id: Uuid::new_v4(),
-            company_id,
             website_id,
             name,
             subtitle: self.subtitle,

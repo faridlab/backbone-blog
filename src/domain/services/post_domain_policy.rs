@@ -5,8 +5,8 @@
 //! `DomainPolicy` enforces pure business invariants (state-based rules).
 //! Identity-based rules live in `backbone_auth::ResourcePolicy`.
 
-use crate::domain::entity::Post;
 use backbone_core::PermitAllPolicy;
+use crate::domain::entity::Post;
 
 /// Domain policy for Post — permits all operations (no business invariants).
 ///

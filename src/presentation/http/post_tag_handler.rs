@@ -21,13 +21,12 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::application::service::{PostTagService, ServiceError};
 use crate::domain::entity::*;
+use crate::application::service::{PostTagService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{
-    CreatePostTagDto, PatchPostTagDto, PostTagResponseDto, UpdatePostTagDto,
-};
+use crate::presentation::dto::{CreatePostTagDto, UpdatePostTagDto, PatchPostTagDto, PostTagResponseDto};
+
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -109,13 +108,10 @@ impl axum::response::IntoResponse for PostTagError {
 /// let router = create_post_tag_routes(service);
 /// ```
 pub fn create_post_tag_routes(service: Arc<PostTagService>) -> Router {
-    BackboneCrudHandler::<
-        PostTagService,
-        PostTag,
-        CreatePostTagDto,
-        UpdatePostTagDto,
-        PostTagResponseDto,
-    >::routes(service, "/post_tags")
+    BackboneCrudHandler::<PostTagService, PostTag, CreatePostTagDto, UpdatePostTagDto, PostTagResponseDto>::routes(
+        service,
+        "/post_tags",
+    )
 }
 
 /// Create Axum router with only the read (GET) endpoints for PostTag.
@@ -124,13 +120,10 @@ pub fn create_post_tag_routes(service: Arc<PostTagService>) -> Router {
 /// Mutations must be served separately via `create_post_tag_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_post_tag_read_routes(service: Arc<PostTagService>) -> Router {
-    BackboneCrudHandler::<
-        PostTagService,
-        PostTag,
-        CreatePostTagDto,
-        UpdatePostTagDto,
-        PostTagResponseDto,
-    >::read_routes(service, "/post_tags")
+    BackboneCrudHandler::<PostTagService, PostTag, CreatePostTagDto, UpdatePostTagDto, PostTagResponseDto>::read_routes(
+        service,
+        "/post_tags",
+    )
 }
 
 /// Create Axum router with only the write (mutation) endpoints for PostTag.
@@ -145,13 +138,10 @@ pub fn create_post_tag_read_routes(service: Arc<PostTagService>) -> Router {
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_post_tag_write_routes(service: Arc<PostTagService>) -> Router {
-    BackboneCrudHandler::<
-        PostTagService,
-        PostTag,
-        CreatePostTagDto,
-        UpdatePostTagDto,
-        PostTagResponseDto,
-    >::write_routes(service, "/post_tags")
+    BackboneCrudHandler::<PostTagService, PostTag, CreatePostTagDto, UpdatePostTagDto, PostTagResponseDto>::write_routes(
+        service,
+        "/post_tags",
+    )
 }
 
 /// Create authenticated routes with auth middleware.
@@ -168,35 +158,30 @@ pub fn create_protected_post_tag_routes<A: AuthMiddleware + Send + Sync + 'stati
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_post_tag_routes(service).layer(middleware::from_fn(
-        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_post_tag_routes(service)
+        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req
-                    .headers()
+                let token = req.headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| {
-                        raw.strip_prefix("Bearer ")
-                            .or_else(|| raw.strip_prefix("bearer "))
-                    })
+                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::UNAUTHORIZED,
-                        axum::Json(serde_json::json!({
-                            "success": false,
-                            "error": "unauthorized",
-                            "message": "Authentication required"
-                        })),
-                    )
-                        .into_response(),
+                    Err(_) => {
+                        (axum::http::StatusCode::UNAUTHORIZED,
+                         axum::Json(serde_json::json!({
+                             "success": false,
+                             "error": "unauthorized",
+                             "message": "Authentication required"
+                         }))
+                        ).into_response()
+                    }
                 }
             }
-        },
-    ))
+        }))
 }

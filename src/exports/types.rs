@@ -5,10 +5,10 @@
 //! These DTOs are the ONLY types other modules should use.
 //! They are decoupled from internal domain entities.
 
-use crate::domain::entity::*;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
+use crate::domain::entity::*;
 
 // ============================================================================
 // BLOG TYPES
@@ -48,7 +48,6 @@ impl From<BlogId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlogDto {
     pub id: BlogId,
-    pub company_id: Uuid,
     pub website_id: Uuid,
     pub name: String,
     pub subtitle: Option<String>,
@@ -108,7 +107,6 @@ impl From<BlogAuditLogId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlogAuditLogDto {
     pub id: BlogAuditLogId,
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     pub actor: Option<Uuid>,
     pub subject_type: Option<String>,
@@ -167,7 +165,6 @@ impl From<PostId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostDto {
     pub id: PostId,
-    pub company_id: Uuid,
     pub blog_id: Uuid,
     pub website_id: Uuid,
     pub title: String,
@@ -239,7 +236,6 @@ impl From<PostTagId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostTagDto {
     pub id: PostTagId,
-    pub company_id: Uuid,
     pub post_id: Uuid,
     pub tag_id: Uuid,
     pub metadata: serde_json::Value,
@@ -295,7 +291,6 @@ impl From<PostViewReceiptId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostViewReceiptDto {
     pub id: PostViewReceiptId,
-    pub company_id: Uuid,
     pub post_id: Uuid,
     pub view_token: String,
     pub window_start: DateTime<Utc>,
@@ -352,7 +347,6 @@ impl From<TagCategoryId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TagCategoryDto {
     pub id: TagCategoryId,
-    pub company_id: Uuid,
     pub name: String,
     pub metadata: serde_json::Value,
 }
@@ -408,7 +402,6 @@ impl From<TagId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TagDto {
     pub id: TagId,
-    pub company_id: Uuid,
     pub name: String,
     pub slug: String,
     pub category_id: Option<Uuid>,

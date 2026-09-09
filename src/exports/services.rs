@@ -5,6 +5,7 @@
 //! These services provide the public API for other modules.
 //! They only expose read operations - writes go through events.
 
+
 // ============================================================================
 // CUSTOM SERVICES
 // ============================================================================
@@ -31,6 +32,6 @@ pub use crate::application::service::notifier_port::{
 // The exported route composers (the host mounts these; the module
 // does not self-mount).
 pub use crate::presentation::http::{
-    blog_admin_routes, blog_public_routes, BlogActor, BlogAdminState, BlogPublicState,
+    blog_admin_routes, blog_public_routes, BlogAdminState, BlogPublicState,
 };
 // <<< CUSTOM SERVICES END >>>

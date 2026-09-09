@@ -18,29 +18,26 @@ use std::sync::Arc;
 use backbone_blog::application::service::blog_service::BlogCommandService;
 use backbone_blog::application::service::notifier_port::RecordingNotifier;
 use backbone_blog::infrastructure::persistence::blog_command_repository::BlogCommandRepository;
-use backbone_orm::company_scope::with_company_scope;
 
-use super::common::{audit_count, make_blog, make_post_visible, posts_with, probe_tenancy, TestDb};
+use super::common::{audit_count, make_blog, make_post_visible, posts_with, probe_website, TestDb};
 
 #[tokio::test]
 async fn archive_is_one_way_and_the_cascade_restores_exactly_its_marker_rows() {
     let db = TestDb::new("archrule").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
 
     let posts = posts_with(&db, Arc::new(RecordingNotifier::new()));
     let blogs = BlogCommandService::new(BlogCommandRepository::new(db.pool.clone()));
 
     // Three published posts: p0 will archive INDIVIDUALLY before the
     // cascade; p1/p2 stay live until the blog cascade takes them.
-    let p0 = make_post_visible(&db, company, blog.id, "solo-archived").await;
-    let p1 = make_post_visible(&db, company, blog.id, "cascaded-one").await;
-    let p2 = make_post_visible(&db, company, blog.id, "cascaded-two").await;
+    let p0 = make_post_visible(&db, blog.id, "solo-archived").await;
+    let p1 = make_post_visible(&db, blog.id, "cascaded-one").await;
+    let p2 = make_post_visible(&db, blog.id, "cascaded-two").await;
 
     // 1. Post archive forces the unpublish.
-    let archived = with_company_scope(Some(company), posts.archive(p0, None))
-        .await
-        .unwrap();
+    let archived = posts.archive(p0, None).await.unwrap();
     assert!(archived.archived_at.is_some());
     assert!(
         !archived.is_published,
@@ -52,23 +49,17 @@ async fn archive_is_one_way_and_the_cascade_restores_exactly_its_marker_rows() {
     );
 
     // 2. Unarchive restores liveness only; nothing re-publishes.
-    let revived = with_company_scope(Some(company), posts.unarchive(p0, None))
-        .await
-        .unwrap();
+    let revived = posts.unarchive(p0, None).await.unwrap();
     assert!(revived.archived_at.is_none(), "unarchive restores liveness");
     assert!(!revived.is_published, "unarchive NEVER re-publishes");
 
     // Re-archive p0 so the marker-restore claim is observable: it is
     // now archived individually (no marker).
-    with_company_scope(Some(company), posts.archive(p0, None))
-        .await
-        .unwrap();
+    posts.archive(p0, None).await.unwrap();
 
     // 3. Blog archive: ONE transaction, marker cascade over the LIVE
     //    posts only, count audited.
-    let (row, cascaded) = with_company_scope(Some(company), blogs.archive(blog.id, None))
-        .await
-        .unwrap();
+    let (row, cascaded) = blogs.archive(blog.id, None).await.unwrap();
     assert!(row.archived_at.is_some());
     assert_eq!(cascaded, 2, "exactly the two live posts cascaded");
     assert_eq!(audit_count(&db, "blog_archived").await, 1);
@@ -109,9 +100,7 @@ async fn archive_is_one_way_and_the_cascade_restores_exactly_its_marker_rows() {
 
     // 4. Blog unarchive restores EXACTLY the marker rows; p0 stays
     //    archived; nothing re-publishes.
-    let (row, restored) = with_company_scope(Some(company), blogs.unarchive(blog.id, None))
-        .await
-        .unwrap();
+    let (row, restored) = blogs.unarchive(blog.id, None).await.unwrap();
     assert!(row.archived_at.is_none());
     assert_eq!(restored, 2, "exactly the two marker rows returned");
     for post_id in [p1, p2] {
@@ -140,14 +129,12 @@ async fn archive_is_one_way_and_the_cascade_restores_exactly_its_marker_rows() {
 #[tokio::test]
 async fn deleting_a_blog_with_posts_is_the_typed_refusal() {
     let db = TestDb::new("archdel").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let _post = make_post_visible(&db, company, blog.id, "blocking-post").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let _post = make_post_visible(&db, blog.id, "blocking-post").await;
 
     let blogs = BlogCommandService::new(BlogCommandRepository::new(db.pool.clone()));
-    let refusal = with_company_scope(Some(company), blogs.delete(blog.id, None))
-        .await
-        .unwrap_err();
+    let refusal = blogs.delete(blog.id, None).await.unwrap_err();
     assert_eq!(refusal.code(), "blog_blog_has_posts");
     assert_eq!(
         audit_count(&db, "blog_delete_refused").await,
@@ -166,10 +153,8 @@ async fn deleting_a_blog_with_posts_is_the_typed_refusal() {
 
     // The EMPTY-blog delete goes through (the guarded arm's other
     // side) — delete needs ZERO posts; a fresh empty blog cleans up.
-    let empty = make_blog(&db, company, view.id, "Empty Journal").await;
-    with_company_scope(Some(company), blogs.delete(empty.id, None))
-        .await
-        .unwrap();
+    let empty = make_blog(&db, view.id, "Empty Journal").await;
+    blogs.delete(empty.id, None).await.unwrap();
 
     db.dispose().await;
 }

@@ -3,16 +3,17 @@
 //!
 //! The generated CRUD alias first (the generator declares this module
 //! but emits no file for this model), then the verb layer: create /
-//! rename / delete at the COMPANY grain (D3), and the tag-category
-//! master verbs. The rename returns the prior slug — the CALLER (the
-//! route, which holds the website surface) records the stale-slug
-//! redirect through WB-3's seam after the verb commits; the service
-//! owns the loop-guard facts (`from != to` is "prior slug differs").
+//! rename / delete, and the tag-category master verbs. The rename
+//! returns the prior slug — the CALLER (the route, which holds the
+//! website surface) records the stale-slug redirect through WB-3's
+//! seam after the verb commits; the service owns the loop-guard facts
+//! (`from != to` is "prior slug differs").
 //!
-//! The vocabulary is company-grain by decision (SPEC section 4.4):
-//! within one company a name exists once; across companies the same
-//! name is fine. The uniqueness walls (H3) enforce it at the DB; this
-//! layer maps the collisions to the typed 409s.
+//! The vocabulary grain is the composing deployment's tenancy unit
+//! (ADR-0029): the module ships no uniqueness wall of its own — the
+//! composing service's decorator installs the per-unit twins where a
+//! deployment declares them, and this layer maps their collisions to
+//! the typed 409s when they reuse the historical wall names.
 
 use uuid::Uuid;
 
@@ -46,7 +47,6 @@ impl TagCommandService {
     /// Create a tag (name required, non-blank; slug derived).
     pub async fn create(
         &self,
-        company: Uuid,
         name: &str,
         category_id: Option<Uuid>,
         actor: Option<Uuid>,
@@ -55,7 +55,7 @@ impl TagCommandService {
         if name.is_empty() {
             return Err(BlogError::InvalidInput("name is required".to_string()));
         }
-        self.tags.create(company, name, category_id, actor).await
+        self.tags.create(name, category_id, actor).await
     }
 
     /// Rename / re-categorize. Returns the row and the PRIOR slug when
@@ -84,7 +84,7 @@ impl TagCommandService {
         self.tags.delete(id, actor).await
     }
 
-    /// The company vocabulary (admin).
+    /// The tag vocabulary (admin).
     pub async fn list(&self) -> BlogResult<Vec<TagRow>> {
         self.tags.list(1000).await
     }
@@ -102,7 +102,6 @@ impl TagCommandService {
 
     pub async fn create_category(
         &self,
-        company: Uuid,
         name: &str,
         actor: Option<Uuid>,
     ) -> BlogResult<TagCategoryRow> {
@@ -110,7 +109,7 @@ impl TagCommandService {
         if name.is_empty() {
             return Err(BlogError::InvalidInput("name is required".to_string()));
         }
-        self.tags.create_category(company, name, actor).await
+        self.tags.create_category(name, actor).await
     }
 
     pub async fn patch_category(

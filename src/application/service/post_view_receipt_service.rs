@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreatePostViewReceiptDto, UpdatePostViewReceiptDto};
 use crate::domain::entity::PostViewReceipt;
 use crate::infrastructure::persistence::PostViewReceiptRepository;
-use crate::presentation::dto::{CreatePostViewReceiptDto, UpdatePostViewReceiptDto};
 
 /// Application service for PostViewReceipt entities.
 ///

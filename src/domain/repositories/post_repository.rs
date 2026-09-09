@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the Post aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::Post;
@@ -44,7 +44,6 @@ pub struct PostPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct PostFilter {
-    pub company_id: Option<Uuid>,
     pub blog_id: Option<Uuid>,
     pub website_id: Option<Uuid>,
     pub title: Option<String>,
@@ -61,18 +60,7 @@ pub struct PostFilter {
 impl PostFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some()
-            || self.blog_id.is_some()
-            || self.website_id.is_some()
-            || self.title.is_some()
-            || self.slug.is_some()
-            || self.content.is_some()
-            || self.teaser.is_some()
-            || self.author_officer.is_some()
-            || self.author_name.is_some()
-            || self.is_published.is_some()
-            || self.allow_comments.is_some()
-            || self.archived_by_blog_id.is_some()
+        self.blog_id.is_some() || self.website_id.is_some() || self.title.is_some() || self.slug.is_some() || self.content.is_some() || self.teaser.is_some() || self.author_officer.is_some() || self.author_name.is_some() || self.is_published.is_some() || self.allow_comments.is_some() || self.archived_by_blog_id.is_some()
     }
 }
 
@@ -82,6 +70,7 @@ impl PostFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait PostRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -109,11 +98,7 @@ pub trait PostRepository: Send + Sync {
     async fn list(&self, params: PostPaginationParams) -> Result<PostPaginatedResult>;
 
     /// List post with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: PostPaginationParams,
-        filters: PostFilter,
-    ) -> Result<PostPaginatedResult>;
+    async fn list_with_filters(&self, params: PostPaginationParams, filters: PostFilter) -> Result<PostPaginatedResult>;
 
     /// Count all post entities
     async fn count(&self) -> Result<u64>;

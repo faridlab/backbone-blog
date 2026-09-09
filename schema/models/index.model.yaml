@@ -24,33 +24,13 @@
 module: blog
 version: 1
 schema: blog
-description: "blog — blogs, posts, tags and visit counting on one website: the one-transaction publish coupling (is_published flip + published_date stamp + one audit row + the notifier port), read-time lazy scheduled publish (post_date <= now, zero crons), company-grain tags whose slug redirects ride the website redirect layer, and session-deduped visits through a receipt ledger with no visitor rows (Odoo `website_blog` port, the website engine's first companion)"
+description: "blog — blogs, posts, tags and visit counting on one website: the one-transaction publish coupling (is_published flip + published_date stamp + one audit row + the notifier port), read-time lazy scheduled publish (post_date <= now, zero crons), tags whose slug redirects ride the website redirect layer, and session-deduped visits through a receipt ledger with no visitor rows (Odoo `website_blog` port, the website engine's first companion)"
 
-# =============================================================================
-# company_fence (ADR-0014): multi-tenant row-level-security posture
-# -----------------------------------------------------------------------------
-# Posture: strict — blog content is unambiguously company-owned (a website
-# belongs to a company, a blog to a website, a post to a blog). There is
-# no shared master data and no global/blank arm anywhere in this module.
-#
-# Posture map (entity -> realized fence, all under this one declaration):
-#   blogs, posts, tag_categories, tags, post_tags, post_view_receipts,
-#   blog_audit_log
-#                   -> strict (NOT NULL company_id; the generated policy
-#                      `company_id = NULLIF(current_setting('app.company_id',
-#                      true), '')::uuid` on both arms — no NULL escape
-#                      anywhere). The audit log is fenced too — a deliberate
-#                      tightening over the events module's shared audit
-#                      table, consistent with this module's strict posture.
-#
-# NOTE: `company_id` must NOT carry `@global` here — in the pinned
-# generator `@global` marks a company-SHARED (unfenced) column and would
-# silently emit NO policy for the table. Every company_id in this module
-# is the fence column, plain: `@required @indexed
-# @exclude_from_foreign_key_check` (a logical ref to
-# organization.companies — never a cross-schema FK).
-# -----------------------------------------------------------------------------
-company_fence: strict
+# Tenancy: none, by design (ADR-0029). The module is tenant-agnostic and reusable —
+# it ships no scoping column and no fence declaration. A composing backend-service
+# that wants these tables org-scoped declares them in its tenancy.yaml; the
+# decorator installs org_unit_id, the RLS policy, the kind guard, and per-unit
+# uniques at composition time.
 
 config:
   database: postgresql
@@ -67,10 +47,10 @@ config:
       - grpc
       - proto
 
-# No sapiens edge exists in this module: officers authenticate through the
-# host's company_auth; the public tier is anonymous (the website binding +
-# the app.blog_tier GUC are its fence). Actor columns are logical refs by
-# construction (the backbone-website shape).
+# No sapiens edge exists in this module: officers arrive through the
+# composing host's org session guard; the public tier is anonymous (the
+# website binding + the app.blog_tier GUC are its fence). Actor columns are
+# logical refs by construction (the backbone-website shape).
 
 # Shared value-object types available to all models in this module.
 shared_types:
@@ -89,7 +69,7 @@ shared_types:
 
   Actors:
     # Plain nullable uuids — NO sapiens edge in this module (officers arrive
-    # through the host's company_auth; system edges are NULL).
+    # through the composing host's session guard; system edges are NULL).
     created_by:
       type: uuid?
       attributes: ["@exclude_from_foreign_key_check"]
@@ -110,7 +90,7 @@ shared_types:
 imports:
   - blog.model.yaml                   # Blog
   - post.model.yaml                   # Post (the fence pair, lazy carrier, visits)
-  - tag.model.yaml                    # TagCategory, Tag (company grain)
-  - post_tag.model.yaml               # PostTag join (fenced)
+  - tag.model.yaml                    # TagCategory, Tag (module-local vocabulary)
+  - post_tag.model.yaml               # PostTag join
   - post_view_receipt.model.yaml      # PostViewReceipt (the dedup wall, not a visitor)
   - blog_audit_log.model.yaml         # BlogAuditLog + BlogAuditEvent enum

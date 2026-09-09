@@ -5,8 +5,8 @@
 //! These handlers use Axum and backbone-core's BackboneCrudHandler
 //! to provide all 12 standard Backbone CRUD endpoints.
 
-pub mod blog_audit_log_handler;
 pub mod blog_handler;
+pub mod blog_audit_log_handler;
 pub mod post_handler;
 pub mod post_tag_handler;
 pub mod post_view_receipt_handler;
@@ -16,32 +16,22 @@ pub mod tag_handler;
 // <<< CUSTOM
 // The verb route trees (hand-written; user-owned — see
 // metaphor.codegen.yaml): the five-path public allowlist (mounted BARE
-// of company_auth by the host) and the officer tree (mounted behind
-// company_auth).
+// of any session guard by the host) and the officer tree (mounted
+// behind the host's org session guard).
 pub mod admin_routes;
 pub mod public_routes;
 // END CUSTOM
 
 // Re-exports
-pub use blog_audit_log_handler::{
-    create_blog_audit_log_read_routes, create_blog_audit_log_routes,
-    create_blog_audit_log_write_routes,
-};
-pub use blog_handler::{create_blog_read_routes, create_blog_routes, create_blog_write_routes};
-pub use post_handler::{create_post_read_routes, create_post_routes, create_post_write_routes};
-pub use post_tag_handler::{
-    create_post_tag_read_routes, create_post_tag_routes, create_post_tag_write_routes,
-};
-pub use post_view_receipt_handler::{
-    create_post_view_receipt_read_routes, create_post_view_receipt_routes,
-    create_post_view_receipt_write_routes,
-};
-pub use tag_category_handler::{
-    create_tag_category_read_routes, create_tag_category_routes, create_tag_category_write_routes,
-};
-pub use tag_handler::{create_tag_read_routes, create_tag_routes, create_tag_write_routes};
+pub use blog_handler::{create_blog_routes, create_blog_read_routes, create_blog_write_routes};
+pub use blog_audit_log_handler::{create_blog_audit_log_routes, create_blog_audit_log_read_routes, create_blog_audit_log_write_routes};
+pub use post_handler::{create_post_routes, create_post_read_routes, create_post_write_routes};
+pub use post_tag_handler::{create_post_tag_routes, create_post_tag_read_routes, create_post_tag_write_routes};
+pub use post_view_receipt_handler::{create_post_view_receipt_routes, create_post_view_receipt_read_routes, create_post_view_receipt_write_routes};
+pub use tag_category_handler::{create_tag_category_routes, create_tag_category_read_routes, create_tag_category_write_routes};
+pub use tag_handler::{create_tag_routes, create_tag_read_routes, create_tag_write_routes};
 // <<< CUSTOM
-pub use admin_routes::{blog_admin_routes, BlogActor, BlogAdminState};
+pub use admin_routes::{blog_admin_routes, BlogAdminState};
 pub use public_routes::{
     blog_public_routes, caller_ip, trusted_proxy_from_env, BlogPublicState, BLOG_TRUSTED_PROXY_ENV,
 };

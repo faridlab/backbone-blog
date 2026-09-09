@@ -5,18 +5,17 @@
 //! Returns an `EntityValidator<BlogAuditLog>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{OptionalNotBlank};
 use crate::domain::entity::BlogAuditLog;
-use backbone_core::OptionalNotBlank;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for BlogAuditLog entities.
 pub type BlogAuditLogValidator = EntityValidator<BlogAuditLog>;
 
 /// Build a validator for BlogAuditLog with all schema-defined field rules.
 pub fn blog_audit_log_validator() -> BlogAuditLogValidator {
-    EntityValidator::new().rule(OptionalNotBlank::new("subject_type", |e: &BlogAuditLog| {
-        e.subject_type.as_deref()
-    }))
+    EntityValidator::new()
+        .rule(OptionalNotBlank::new("subject_type", |e: &BlogAuditLog| e.subject_type.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

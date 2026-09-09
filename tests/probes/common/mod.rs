@@ -200,7 +200,6 @@ use backbone_blog::infrastructure::persistence::blog_command_repository::{
 use backbone_blog::infrastructure::persistence::post_command_repository::{
     CreatePostInput, PostCommandRepository,
 };
-use backbone_orm::company_scope::with_company_scope;
 
 pub use backbone_blog::application::service::notifier_port::RecordingNotifier;
 
@@ -339,15 +338,15 @@ impl backbone_website::exports::WebsiteSurface for StubSurface {
 
 // ── shared fixtures ────────────────────────────────────────────────────────
 
-/// A fresh (company, website) pair plus the probe website view bound
-/// to `PROBE_HOST`.
-pub fn probe_tenancy() -> (Uuid, backbone_website::exports::WebsiteView) {
-    let company = Uuid::new_v4();
-    let view = backbone_website::exports::WebsiteView {
+/// The probe website view bound to `PROBE_HOST`. The view's company
+/// field is the website SIBLING's own data (backbone-website carries
+/// it; the blog module does not read it).
+pub fn probe_website() -> backbone_website::exports::WebsiteView {
+    backbone_website::exports::WebsiteView {
         id: Uuid::new_v4(),
         name: "Probe Website".to_string(),
         domain: Some(PROBE_HOST.to_string()),
-        company_id: company,
+        company_id: Uuid::new_v4(),
         public_user_id: Uuid::new_v4(),
         default_lang_code: "en".to_string(),
         homepage_url: "/".to_string(),
@@ -355,29 +354,24 @@ pub fn probe_tenancy() -> (Uuid, backbone_website::exports::WebsiteView) {
         social_links: None,
         contact_recipients: Vec::new(),
         sequence: 1,
-    };
-    (company, view)
+    }
 }
 
-/// Create a blog through the verb service (inside the owner-side
-/// company scope, the legitimate setup path).
-pub async fn make_blog(db: &TestDb, company: Uuid, website_id: Uuid, name: &str) -> BlogRow {
+/// Create a blog through the verb service (the legitimate setup path).
+pub async fn make_blog(db: &TestDb, website_id: Uuid, name: &str) -> BlogRow {
     let service = BlogCommandService::new(BlogCommandRepository::new(db.pool.clone()));
-    with_company_scope(
-        Some(company),
-        service.create(
+    service
+        .create(
             &CreateBlogInput {
-                company_id: company,
                 website_id,
                 name: name.to_string(),
                 subtitle: None,
                 description: None,
             },
             None,
-        ),
-    )
-    .await
-    .unwrap_or_else(|e| panic!("probe fixture: blog create failed: {e:?}"))
+        )
+        .await
+        .unwrap_or_else(|e| panic!("probe fixture: blog create failed: {e:?}"))
 }
 
 /// The post verb service over the probe pool with the recording
@@ -392,9 +386,8 @@ pub fn posts_with(
 }
 
 /// A plain post-create input (draft, post_date now).
-pub fn post_input(company: Uuid, blog_id: Uuid, title: &str, slug: &str) -> CreatePostInput {
+pub fn post_input(blog_id: Uuid, title: &str, slug: &str) -> CreatePostInput {
     CreatePostInput {
-        company_id: company,
         blog_id,
         title: title.to_string(),
         slug: slug.to_string(),
@@ -409,32 +402,24 @@ pub fn post_input(company: Uuid, blog_id: Uuid, title: &str, slug: &str) -> Crea
 }
 
 /// A DRAFT post (created, never published).
-pub async fn make_post_draft(db: &TestDb, company: Uuid, blog_id: Uuid, slug: &str) -> uuid::Uuid {
+pub async fn make_post_draft(db: &TestDb, blog_id: Uuid, slug: &str) -> uuid::Uuid {
     let service = posts_with(db, std::sync::Arc::new(RecordingNotifier::new()));
-    let row = with_company_scope(
-        Some(company),
-        service.create(&post_input(company, blog_id, "Probe Post", slug), None),
-    )
-    .await
-    .unwrap_or_else(|e| panic!("probe fixture: post create failed: {e:?}"));
+    let row = service
+        .create(&post_input(blog_id, "Probe Post", slug), None)
+        .await
+        .unwrap_or_else(|e| panic!("probe fixture: post create failed: {e:?}"));
     row.id
 }
 
 /// A VISIBLE post (created + published, post_date now).
-pub async fn make_post_visible(
-    db: &TestDb,
-    company: Uuid,
-    blog_id: Uuid,
-    slug: &str,
-) -> uuid::Uuid {
+pub async fn make_post_visible(db: &TestDb, blog_id: Uuid, slug: &str) -> uuid::Uuid {
     let service = posts_with(db, std::sync::Arc::new(RecordingNotifier::new()));
-    let row = with_company_scope(
-        Some(company),
-        service.create(&post_input(company, blog_id, "Probe Post", slug), None),
-    )
-    .await
-    .unwrap();
-    with_company_scope(Some(company), service.publish(row.id, None))
+    let row = service
+        .create(&post_input(blog_id, "Probe Post", slug), None)
+        .await
+        .unwrap();
+    service
+        .publish(row.id, None)
         .await
         .unwrap_or_else(|e| panic!("probe fixture: publish failed: {e:?}"));
     row.id
@@ -442,64 +427,47 @@ pub async fn make_post_visible(
 
 /// A FUTURE post (published now, post_date a day out — the lazy arm:
 /// is_published is true, the row is invisible until post_date passes).
-pub async fn make_post_future(db: &TestDb, company: Uuid, blog_id: Uuid, slug: &str) -> uuid::Uuid {
+pub async fn make_post_future(db: &TestDb, blog_id: Uuid, slug: &str) -> uuid::Uuid {
     let service = posts_with(db, std::sync::Arc::new(RecordingNotifier::new()));
-    let mut input = post_input(company, blog_id, "Probe Future Post", slug);
+    let mut input = post_input(blog_id, "Probe Future Post", slug);
     input.post_date = chrono::Utc::now() + chrono::Duration::days(1);
-    let row = with_company_scope(Some(company), service.create(&input, None))
-        .await
-        .unwrap();
-    with_company_scope(Some(company), service.publish(row.id, None))
-        .await
-        .unwrap();
+    let row = service.create(&input, None).await.unwrap();
+    service.publish(row.id, None).await.unwrap();
     row.id
 }
 
 /// An ARCHIVED post (created, published, then archived — the forced
 /// unpublish).
-pub async fn make_post_archived(
-    db: &TestDb,
-    company: Uuid,
-    blog_id: Uuid,
-    slug: &str,
-) -> uuid::Uuid {
+pub async fn make_post_archived(db: &TestDb, blog_id: Uuid, slug: &str) -> uuid::Uuid {
     let service = posts_with(db, std::sync::Arc::new(RecordingNotifier::new()));
-    let row = with_company_scope(
-        Some(company),
-        service.create(
-            &post_input(company, blog_id, "Probe Archived Post", slug),
-            None,
-        ),
-    )
-    .await
-    .unwrap();
-    with_company_scope(Some(company), service.publish(row.id, None))
+    let row = service
+        .create(&post_input(blog_id, "Probe Archived Post", slug), None)
         .await
         .unwrap();
-    with_company_scope(Some(company), service.archive(row.id, None))
-        .await
-        .unwrap();
+    service.publish(row.id, None).await.unwrap();
+    service.archive(row.id, None).await.unwrap();
     row.id
 }
 
-/// Create a tag through the verb service (company grain).
+/// Create a tag through the verb service.
 pub async fn make_tag(
     db: &TestDb,
-    company: Uuid,
     name: &str,
 ) -> backbone_blog::infrastructure::persistence::tag_command_repository::TagRow {
     use backbone_blog::application::service::tag_service::TagCommandService;
     use backbone_blog::infrastructure::persistence::tag_command_repository::TagCommandRepository;
     let service = TagCommandService::new(TagCommandRepository::new(db.pool.clone()));
-    with_company_scope(Some(company), service.create(company, name, None, None))
+    service
+        .create(name, None, None)
         .await
         .unwrap_or_else(|e| panic!("probe fixture: tag create failed: {e:?}"))
 }
 
-/// Attach tags to a post through the set-tags verb (scoped ids).
-pub async fn tag_post(db: &TestDb, company: Uuid, post_id: Uuid, tag_ids: &[uuid::Uuid]) {
+/// Attach tags to a post through the set-tags verb (resolved ids).
+pub async fn tag_post(db: &TestDb, post_id: Uuid, tag_ids: &[uuid::Uuid]) {
     let service = posts_with(db, std::sync::Arc::new(RecordingNotifier::new()));
-    with_company_scope(Some(company), service.set_tags(post_id, tag_ids, None))
+    service
+        .set_tags(post_id, tag_ids, None)
         .await
         .unwrap_or_else(|e| panic!("probe fixture: set_tags failed: {e:?}"));
 }
@@ -516,34 +484,19 @@ pub async fn audit_count(db: &TestDb, event: &str) -> i64 {
     .unwrap_or_else(|e| panic!("probe fixture: audit census failed: {e}"))
 }
 
-/// A company-scoped setup write: the probe's own setup SQL, run with
-/// the scope bound first (the same discipline the repositories hold;
-/// the superuser probe pool bypasses nothing worth trusting — every
-/// setup write binds the tenant it writes for).
-pub async fn scoped_exec(db: &TestDb, company: Uuid, sql: &str) {
-    let mut tx = db
-        .pool
-        .begin()
-        .await
-        .unwrap_or_else(|e| panic!("probe fixture: scoped_exec begin: {e}"));
-    backbone_orm::company_scope::bind_company_on(&mut tx, company)
-        .await
-        .unwrap_or_else(|e| panic!("probe fixture: scoped_exec bind: {e}"));
+/// A probe setup write: the probe's own SQL, run on the probe pool.
+pub async fn exec_sql(db: &TestDb, sql: &str) {
     sqlx::query(sql)
-        .execute(&mut *tx)
+        .execute(&db.pool)
         .await
-        .unwrap_or_else(|e| panic!("probe fixture: scoped_exec run: {e}"));
-    tx.commit()
-        .await
-        .unwrap_or_else(|e| panic!("probe fixture: scoped_exec commit: {e}"));
+        .unwrap_or_else(|e| panic!("probe fixture: exec_sql run: {e}"));
 }
 
 /// Pre-set a FUTURE `published_date` on a post (the lazy-schedule arm
 /// the publish stamp must PRESERVE, not overwrite).
-pub async fn preset_future_published_date(db: &TestDb, company: Uuid, post_id: Uuid) {
-    scoped_exec(
+pub async fn preset_future_published_date(db: &TestDb, post_id: Uuid) {
+    exec_sql(
         db,
-        company,
         &format!(
             "UPDATE blog.posts SET published_date = now() + interval '1 day' \
              WHERE id = '{post_id}'"
@@ -553,12 +506,11 @@ pub async fn preset_future_published_date(db: &TestDb, company: Uuid, post_id: U
 }
 
 /// The lazy-visibility test shortcut: backdate one post's `post_date`
-/// past now inside a scoped transaction (SPEC section 4.3's sanctioned
-/// shortcut — the row becomes publicly visible with NO cron).
-pub async fn backdate_post(db: &TestDb, company: Uuid, post_id: Uuid) {
-    scoped_exec(
+/// past now (SPEC section 4.3's sanctioned shortcut — the row becomes
+/// publicly visible with NO cron).
+pub async fn backdate_post(db: &TestDb, post_id: Uuid) {
+    exec_sql(
         db,
-        company,
         &format!(
             "UPDATE blog.posts SET post_date = now() - interval '1 second' \
              WHERE id = '{post_id}'"

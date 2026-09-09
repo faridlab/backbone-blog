@@ -41,8 +41,9 @@ user_owned:
   # purpose at this version.
   - "src/application/service/capability.rs"
 
-  # The public-tier scope binder: company GUC + the app.blog_tier
-  # transaction-local mark the restrictive visibility policies key on.
+  # The public-tier scope binder: the ambient org scope relayed onto
+  # the transaction + the app.blog_tier transaction-local mark the
+  # restrictive visibility policies key on.
   - "src/application/service/site_scope.rs"
 
   # The publish-notify port + the refusing default (non-blocking posture:
@@ -60,8 +61,8 @@ user_owned:
   # notifier), unpublish, the one-way archive pair, tag set.
   - "src/application/service/post_service.rs"
 
-  # Tag verbs: company-grain guarded create/rename (redirect recorded)/
-  # delete (untag everywhere).
+  # Tag verbs: guarded create/rename (redirect recorded)/delete (untag
+  # everywhere).
   - "src/application/service/tag_service.rs"
 
   # The visit verb: per-IP AND per-token fixed windows, token arm
@@ -75,8 +76,9 @@ user_owned:
 
   # Hand repositories carrying the transactional SQL the services compose
   # (services hold no raw sqlx — the DDD boundary). Every transactional
-  # method binds the company scope first; direct-pool statements go
-  # through the backbone-orm company_scope *_scoped helpers.
+  # method relays the ambient org scope onto its transaction first;
+  # direct-pool statements go through the backbone-orm *_scoped helpers,
+  # which ride the request connection when one is bound.
   - "src/infrastructure/persistence/blog_command_repository.rs"
   - "src/infrastructure/persistence/post_command_repository.rs"
   - "src/infrastructure/persistence/tag_command_repository.rs"
@@ -84,13 +86,14 @@ user_owned:
   - "src/infrastructure/persistence/public_query_repository.rs"
 
   # The declared public read tree (the five-path allowlist) — mounted BARE
-  # of company_auth by the host; the site binding + tier fence + throttle
-  # are the gates.
+  # of any session guard by the host; the site binding + tier fence +
+  # throttle are the gates.
   - "src/presentation/http/public_routes.rs"
 
   # The officer tree (blogs/posts/tags/tag-categories + the publish and
-  # archive verbs). The host mounts it behind company_auth with the
-  # module-write gate keyed "blog" as the innermost route layer.
+  # archive verbs). The host mounts it behind its org session guard
+  # (org_auth), which authenticates the session and inserts the org
+  # context the handlers extract.
   - "src/presentation/http/admin_routes.rs"
 
   # GENERATOR-DEFECT FREEZE (the events-module pattern): the pinned
@@ -115,6 +118,13 @@ user_owned:
   # slug-reservation partial unique, the slug-shape/visits/window CHECKs,
   # and the stranded-FK repairs above.
   - "migrations/*hardening*"
+
+  # Hand-authored tenancy strip: drops every company-fence artifact from the
+  # blog tables (the company-grain tag walls, the company isolation policies,
+  # the company_id columns). The ordering guard (refuse to strip tables the
+  # composing service's tenancy decorator has not yet backfilled) is
+  # hand-authored logic, not schema-derived emission.
+  - "migrations/*strip_tenancy*"
 
   # Hand-authored module documentation (operator + spec).
   - "README.md"

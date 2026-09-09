@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::PostTag;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,22 +32,10 @@ use crate::domain::entity::PostTag;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreatePostTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "post_id")]
     pub post_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "tag_id")]
     pub tag_id: Uuid,
 }
@@ -65,22 +53,10 @@ pub struct CreatePostTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatePostTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "post_id")]
     pub post_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "tag_id")]
     pub tag_id: Uuid,
 }
@@ -98,22 +74,10 @@ pub struct UpdatePostTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchPostTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "post_id")]
     pub post_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "tag_id")]
     pub tag_id: Option<Uuid>,
 }
@@ -121,7 +85,7 @@ pub struct PatchPostTagDto {
 impl PatchPostTagDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.post_id.is_some() || self.tag_id.is_some()
+        self.post_id.is_some() || self.tag_id.is_some()
     }
 }
 
@@ -137,25 +101,11 @@ impl PatchPostTagDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PostTagResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub post_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub tag_id: Uuid,
     pub metadata: AuditMetadata,
 }
@@ -214,7 +164,6 @@ impl PostTagListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct PostTagSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub post_id: Uuid,
     pub tag_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
@@ -228,7 +177,6 @@ impl From<PostTag> for PostTagResponseDto {
     fn from(entity: PostTag) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             post_id: entity.post_id,
             tag_id: entity.tag_id,
             metadata: entity.metadata,
@@ -241,7 +189,6 @@ impl From<PostTag> for PostTagSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             post_id: entity.post_id,
             tag_id: entity.tag_id,
             created_at,
@@ -253,7 +200,6 @@ impl From<CreatePostTagDto> for PostTag {
     fn from(dto: CreatePostTagDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             post_id: dto.post_id,
             tag_id: dto.tag_id,
             metadata: AuditMetadata::default(),
@@ -265,7 +211,6 @@ impl From<&PostTag> for PostTagResponseDto {
     fn from(entity: &PostTag) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             post_id: entity.post_id.clone(),
             tag_id: entity.tag_id.clone(),
             metadata: entity.metadata.clone(),
@@ -281,7 +226,6 @@ impl backbone_core::FromCreateDto<CreatePostTagDto> for PostTag {
 
 impl backbone_core::ApplyUpdateDto<UpdatePostTagDto> for PostTag {
     fn apply_update(mut self, dto: UpdatePostTagDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.post_id = dto.post_id;
         self.tag_id = dto.tag_id;
         Ok(self)

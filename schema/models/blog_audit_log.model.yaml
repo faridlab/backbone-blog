@@ -5,9 +5,9 @@
 # deleted by application code. The closed vocabulary carries every
 # security-relevant edge: publish refusals, the ONE publish event, notify
 # parks, and capability/throttle refusals land here as durable facts (a
-# refused write is still a fact). Carries its own company_id — the audit
-# trail is fenced like everything else (a deliberate tightening over the
-# events module's shared audit table).
+# refused write is still a fact). The audit trail carries no tenancy of its
+# own (ADR-0029): a composing backend-service that org-scopes the module
+# fences this table through its tenancy decorator like every other table.
 #
 # Deliberately ABSENT from the vocabulary:
 #  - `post_visited` — the visit counter + the receipt ledger ARE the
@@ -27,10 +27,6 @@ models:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique record id"
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "The strict fence column — the audit row lands inside the verb's company scope."
       event:
         type: BlogAuditEvent
         attributes: ["@required", "@indexed"]
@@ -92,7 +88,7 @@ enums:
       - name: post_unarchived
         description: "The post unarchive verb restored liveness (is_published stays false — the one-way rule)"
       - name: tag_created
-        description: "A tag was created at the company grain"
+        description: "A tag was created"
       - name: tag_updated
         description: "A tag was renamed / re-categorized (the slug redirect recorded is in detail)"
       - name: tag_deleted

@@ -2595,15 +2595,11 @@ components:
       type: object
       required:
         - id
-        - company_id
         - website_id
         - name
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         website_id:
@@ -2642,14 +2638,10 @@ components:
     CreateBlogRequest:
       type: object
       required:
-        - company_id
         - website_id
         - name
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         website_id:
           type: string
           format: uuid
@@ -2673,14 +2665,10 @@ components:
     UpdateBlogRequest:
       type: object
       required:
-        - company_id
         - website_id
         - name
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         website_id:
           type: string
           format: uuid
@@ -2704,9 +2692,6 @@ components:
     PatchBlogRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         website_id:
           type: string
           format: uuid
@@ -2741,14 +2726,10 @@ components:
       type: object
       required:
         - id
-        - company_id
         - event
         - occurred_at
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         event:
@@ -2788,13 +2769,9 @@ components:
     CreateBlogAuditLogRequest:
       type: object
       required:
-        - company_id
         - event
         - occurred_at
       properties:
-        company_id:
-          type: string
-          format: uuid
         event:
           type: string
         actor:
@@ -2819,13 +2796,9 @@ components:
     UpdateBlogAuditLogRequest:
       type: object
       required:
-        - company_id
         - event
         - occurred_at
       properties:
-        company_id:
-          type: string
-          format: uuid
         event:
           type: string
         actor:
@@ -2850,9 +2823,6 @@ components:
     PatchBlogAuditLogRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         event:
           type: string
         actor:
@@ -2888,7 +2858,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - blog_id
         - website_id
         - title
@@ -2900,9 +2869,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         blog_id:
@@ -2976,7 +2942,6 @@ components:
     CreatePostRequest:
       type: object
       required:
-        - company_id
         - blog_id
         - website_id
         - title
@@ -2987,9 +2952,6 @@ components:
         - allow_comments
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         blog_id:
           type: string
           format: uuid
@@ -3048,7 +3010,6 @@ components:
     UpdatePostRequest:
       type: object
       required:
-        - company_id
         - blog_id
         - website_id
         - title
@@ -3059,9 +3020,6 @@ components:
         - allow_comments
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         blog_id:
           type: string
           format: uuid
@@ -3120,9 +3078,6 @@ components:
     PatchPostRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         blog_id:
           type: string
           format: uuid
@@ -3192,15 +3147,11 @@ components:
       type: object
       required:
         - id
-        - company_id
         - post_id
         - tag_id
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         post_id:
@@ -3228,14 +3179,10 @@ components:
     CreatePostTagRequest:
       type: object
       required:
-        - company_id
         - post_id
         - tag_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3248,14 +3195,10 @@ components:
     UpdatePostTagRequest:
       type: object
       required:
-        - company_id
         - post_id
         - tag_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3268,9 +3211,6 @@ components:
     PatchPostTagRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3294,16 +3234,12 @@ components:
       type: object
       required:
         - id
-        - company_id
         - post_id
         - view_token
         - window_start
         - occurred_at
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         post_id:
@@ -3335,15 +3271,11 @@ components:
     CreatePostViewReceiptRequest:
       type: object
       required:
-        - company_id
         - post_id
         - view_token
         - window_start
         - occurred_at
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3360,15 +3292,11 @@ components:
     UpdatePostViewReceiptRequest:
       type: object
       required:
-        - company_id
         - post_id
         - view_token
         - window_start
         - occurred_at
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3385,9 +3313,6 @@ components:
     PatchPostViewReceiptRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         post_id:
           type: string
           format: uuid
@@ -3415,14 +3340,10 @@ components:
       type: object
       required:
         - id
-        - company_id
         - name
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         name:
@@ -3447,13 +3368,9 @@ components:
     CreateTagCategoryRequest:
       type: object
       required:
-        - company_id
         - name
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120
@@ -3463,13 +3380,9 @@ components:
     UpdateTagCategoryRequest:
       type: object
       required:
-        - company_id
         - name
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120
@@ -3479,9 +3392,6 @@ components:
     PatchTagCategoryRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120
@@ -3502,15 +3412,11 @@ components:
       type: object
       required:
         - id
-        - company_id
         - name
         - slug
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         name:
@@ -3542,14 +3448,10 @@ components:
     CreateTagRequest:
       type: object
       required:
-        - company_id
         - name
         - slug
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120
@@ -3566,14 +3468,10 @@ components:
     UpdateTagRequest:
       type: object
       required:
-        - company_id
         - name
         - slug
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120
@@ -3590,9 +3488,6 @@ components:
     PatchTagRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
           maxLength: 120

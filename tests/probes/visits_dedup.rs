@@ -30,7 +30,7 @@ use backbone_blog::application::service::capability::mint_view_token;
 use backbone_blog::presentation::http::{blog_public_routes, BlogPublicState};
 
 use super::common::{
-    make_blog, make_post_draft, make_post_visible, probe_tenancy, StubSurface, TestDb, PROBE_HOST,
+    make_blog, make_post_draft, make_post_visible, probe_website, StubSurface, TestDb, PROBE_HOST,
     PROBE_SECRET,
 };
 
@@ -68,10 +68,10 @@ fn mint() -> String {
 #[tokio::test]
 async fn the_receipt_wall_dedupes_tokens_not_people() {
     let db = TestDb::new("visitdedup").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let _post_id = make_post_visible(&db, company, blog.id, "counted-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let _post_id = make_post_visible(&db, blog.id, "counted-post").await;
 
     let state = BlogPublicState::with_secret(db.pool.clone(), surface, PROBE_SECRET.to_string());
     let app = blog_public_routes(state);
@@ -112,10 +112,10 @@ async fn the_receipt_wall_dedupes_tokens_not_people() {
 #[tokio::test]
 async fn concurrent_first_visits_with_one_token_move_the_counter_once() {
     let db = TestDb::new("visitrace").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let _post_id = make_post_visible(&db, company, blog.id, "raced-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let _post_id = make_post_visible(&db, blog.id, "raced-post").await;
 
     let state = Arc::new(BlogPublicState::with_secret(
         db.pool.clone(),
@@ -161,11 +161,11 @@ async fn concurrent_first_visits_with_one_token_move_the_counter_once() {
 #[tokio::test]
 async fn n_distinct_tokens_count_exactly_n_and_invisible_posts_leave_no_receipt() {
     let db = TestDb::new("visittok").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let visible_id = make_post_visible(&db, company, blog.id, "token-post").await;
-    let draft_id = make_post_draft(&db, company, blog.id, "draft-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let visible_id = make_post_visible(&db, blog.id, "token-post").await;
+    let draft_id = make_post_draft(&db, blog.id, "draft-post").await;
 
     let state = BlogPublicState::with_secret(db.pool.clone(), surface, PROBE_SECRET.to_string());
     let app = blog_public_routes(state);
@@ -224,10 +224,10 @@ async fn n_distinct_tokens_count_exactly_n_and_invisible_posts_leave_no_receipt(
 #[tokio::test]
 async fn the_burst_trips_the_throttle_with_retry_after() {
     let db = TestDb::new("visitburst").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let _post_id = make_post_visible(&db, company, blog.id, "burst-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let _post_id = make_post_visible(&db, blog.id, "burst-post").await;
 
     let state = BlogPublicState::with_secret(db.pool.clone(), surface, PROBE_SECRET.to_string());
     let app = blog_public_routes(state);

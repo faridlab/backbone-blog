@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the Tag aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::Tag;
@@ -44,7 +44,6 @@ pub struct TagPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct TagFilter {
-    pub company_id: Option<Uuid>,
     pub name: Option<String>,
     pub slug: Option<String>,
     pub category_id: Option<Uuid>,
@@ -53,10 +52,7 @@ pub struct TagFilter {
 impl TagFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some()
-            || self.name.is_some()
-            || self.slug.is_some()
-            || self.category_id.is_some()
+        self.name.is_some() || self.slug.is_some() || self.category_id.is_some()
     }
 }
 
@@ -66,6 +62,7 @@ impl TagFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait TagRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -93,11 +90,7 @@ pub trait TagRepository: Send + Sync {
     async fn list(&self, params: TagPaginationParams) -> Result<TagPaginatedResult>;
 
     /// List tag with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: TagPaginationParams,
-        filters: TagFilter,
-    ) -> Result<TagPaginatedResult>;
+    async fn list_with_filters(&self, params: TagPaginationParams, filters: TagFilter) -> Result<TagPaginatedResult>;
 
     /// Count all tag entities
     async fn count(&self) -> Result<u64>;

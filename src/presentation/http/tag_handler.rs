@@ -21,11 +21,12 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::application::service::{ServiceError, TagService};
 use crate::domain::entity::*;
+use crate::application::service::{TagService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{CreateTagDto, PatchTagDto, TagResponseDto, UpdateTagDto};
+use crate::presentation::dto::{CreateTagDto, UpdateTagDto, PatchTagDto, TagResponseDto};
+
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -108,7 +109,8 @@ impl axum::response::IntoResponse for TagError {
 /// ```
 pub fn create_tag_routes(service: Arc<TagService>) -> Router {
     BackboneCrudHandler::<TagService, Tag, CreateTagDto, UpdateTagDto, TagResponseDto>::routes(
-        service, "/tags",
+        service,
+        "/tags",
     )
 }
 
@@ -119,7 +121,8 @@ pub fn create_tag_routes(service: Arc<TagService>) -> Router {
 /// typically wrapped in an auth middleware layer.
 pub fn create_tag_read_routes(service: Arc<TagService>) -> Router {
     BackboneCrudHandler::<TagService, Tag, CreateTagDto, UpdateTagDto, TagResponseDto>::read_routes(
-        service, "/tags",
+        service,
+        "/tags",
     )
 }
 
@@ -136,7 +139,8 @@ pub fn create_tag_read_routes(service: Arc<TagService>) -> Router {
 /// for any mutation that must respect domain rules.
 pub fn create_tag_write_routes(service: Arc<TagService>) -> Router {
     BackboneCrudHandler::<TagService, Tag, CreateTagDto, UpdateTagDto, TagResponseDto>::write_routes(
-        service, "/tags",
+        service,
+        "/tags",
     )
 }
 
@@ -154,35 +158,30 @@ pub fn create_protected_tag_routes<A: AuthMiddleware + Send + Sync + 'static>(
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_tag_routes(service).layer(middleware::from_fn(
-        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_tag_routes(service)
+        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req
-                    .headers()
+                let token = req.headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| {
-                        raw.strip_prefix("Bearer ")
-                            .or_else(|| raw.strip_prefix("bearer "))
-                    })
+                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::UNAUTHORIZED,
-                        axum::Json(serde_json::json!({
-                            "success": false,
-                            "error": "unauthorized",
-                            "message": "Authentication required"
-                        })),
-                    )
-                        .into_response(),
+                    Err(_) => {
+                        (axum::http::StatusCode::UNAUTHORIZED,
+                         axum::Json(serde_json::json!({
+                             "success": false,
+                             "error": "unauthorized",
+                             "message": "Authentication required"
+                         }))
+                        ).into_response()
+                    }
                 }
             }
-        },
-    ))
+        }))
 }

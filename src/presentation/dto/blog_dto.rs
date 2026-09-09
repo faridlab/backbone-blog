@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Blog;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,16 +32,7 @@ use crate::domain::entity::Blog;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateBlogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "website_id")]
     pub website_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
@@ -52,11 +43,7 @@ pub struct CreateBlogDto {
     pub subtitle: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_at")]
     pub archived_at: Option<DateTime<Utc>>,
 }
 
@@ -73,16 +60,7 @@ pub struct CreateBlogDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateBlogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "website_id")]
     pub website_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
@@ -93,11 +71,7 @@ pub struct UpdateBlogDto {
     pub subtitle: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "archived_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archived_at")]
     pub archived_at: Option<DateTime<Utc>>,
 }
 
@@ -114,16 +88,7 @@ pub struct UpdateBlogDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchBlogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "website_id")]
     pub website_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
@@ -142,12 +107,7 @@ pub struct PatchBlogDto {
 impl PatchBlogDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some()
-            || self.website_id.is_some()
-            || self.name.is_some()
-            || self.subtitle.is_some()
-            || self.description.is_some()
-            || self.archived_at.is_some()
+        self.website_id.is_some() || self.name.is_some() || self.subtitle.is_some() || self.description.is_some() || self.archived_at.is_some()
     }
 }
 
@@ -163,20 +123,9 @@ impl PatchBlogDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct BlogResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub website_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -240,9 +189,9 @@ impl BlogListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct BlogSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub website_id: Uuid,
     pub name: String,
+    pub subtitle: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -254,7 +203,6 @@ impl From<Blog> for BlogResponseDto {
     fn from(entity: Blog) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             website_id: entity.website_id,
             name: entity.name,
             subtitle: entity.subtitle,
@@ -270,9 +218,9 @@ impl From<Blog> for BlogSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             website_id: entity.website_id,
             name: entity.name,
+            subtitle: entity.subtitle,
             created_at,
         }
     }
@@ -282,7 +230,6 @@ impl From<CreateBlogDto> for Blog {
     fn from(dto: CreateBlogDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             website_id: dto.website_id,
             name: dto.name,
             subtitle: dto.subtitle,
@@ -297,7 +244,6 @@ impl From<&Blog> for BlogResponseDto {
     fn from(entity: &Blog) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             website_id: entity.website_id.clone(),
             name: entity.name.clone(),
             subtitle: entity.subtitle.clone(),
@@ -316,7 +262,6 @@ impl backbone_core::FromCreateDto<CreateBlogDto> for Blog {
 
 impl backbone_core::ApplyUpdateDto<UpdateBlogDto> for Blog {
     fn apply_update(mut self, dto: UpdateBlogDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.website_id = dto.website_id;
         self.name = dto.name;
         self.subtitle = dto.subtitle;

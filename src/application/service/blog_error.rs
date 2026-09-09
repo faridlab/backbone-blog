@@ -63,12 +63,13 @@ pub enum BlogError {
     #[error("capability secret not configured")]
     CapabilitySecretNotConfigured,
 
-    /// The `(blog_id, slug)` wall (posts) or `(company_id, slug)`
-    /// (tags).
+    /// The `(blog_id, slug)` wall (posts) or a tag slug wall.
     #[error("slug already taken")]
     SlugTaken,
 
-    /// The `(company_id, lower(name))` wall (D3).
+    /// A tag name wall (the module ships none; a composing service's
+    /// decorator-installed twin surfaces here when it reuses the
+    /// historical wall name).
     #[error("tag name already taken")]
     TagNameTaken,
 
@@ -171,9 +172,11 @@ impl From<anyhow::Error> for BlogError {
 }
 
 /// Map a unique-violation error onto the typed 409s by constraint
-/// name (the H3/H4/H5/H6 walls; `23505`). Unknown unique walls fall
-/// through to `SlugTaken`'s generic cousin only when the constraint
-/// matches a known name; anything else stays a Database error.
+/// name (the H4/H5/H6 walls; `23505`). The module itself ships no tag
+/// name/slug wall since the tenancy strip — a composing service's
+/// decorator-installed per-unit twins answer the typed 409s when they
+/// reuse the historical wall names, and fall through to the generic
+/// duplicate mapping otherwise.
 pub fn map_unique_violation(err: sqlx::Error) -> BlogError {
     if let sqlx::Error::Database(db) = &err {
         if db.code().as_deref() == Some("23505") {

@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the PostTag aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::PostTag;
@@ -44,7 +44,6 @@ pub struct PostTagPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct PostTagFilter {
-    pub company_id: Option<Uuid>,
     pub post_id: Option<Uuid>,
     pub tag_id: Option<Uuid>,
 }
@@ -52,7 +51,7 @@ pub struct PostTagFilter {
 impl PostTagFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.post_id.is_some() || self.tag_id.is_some()
+        self.post_id.is_some() || self.tag_id.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl PostTagFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait PostTagRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -89,11 +89,7 @@ pub trait PostTagRepository: Send + Sync {
     async fn list(&self, params: PostTagPaginationParams) -> Result<PostTagPaginatedResult>;
 
     /// List post_tag with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: PostTagPaginationParams,
-        filters: PostTagFilter,
-    ) -> Result<PostTagPaginatedResult>;
+    async fn list_with_filters(&self, params: PostTagPaginationParams, filters: PostTagFilter) -> Result<PostTagPaginatedResult>;
 
     /// Count all post_tag entities
     async fn count(&self) -> Result<u64>;
@@ -115,8 +111,7 @@ pub trait PostTagRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<PostTag>>;
 
     /// List soft-deleted post_tag entities
-    async fn list_deleted(&self, params: PostTagPaginationParams)
-        -> Result<PostTagPaginatedResult>;
+    async fn list_deleted(&self, params: PostTagPaginationParams) -> Result<PostTagPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

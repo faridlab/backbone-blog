@@ -17,13 +17,13 @@ pub const TABLE_NAME: &str = "blog.blogs";
 ///
 /// All standard CRUD, soft-delete, pagination, and bulk methods are
 /// provided automatically via `Deref` to `backbone_orm::GenericCrudRepository`.
-pub struct BlogRepository(backbone_orm::GenericCrudRepository<Blog, backbone_orm::SoftDelete>);
+pub struct BlogRepository(
+    backbone_orm::GenericCrudRepository<Blog, backbone_orm::SoftDelete>,
+);
 
 impl std::ops::Deref for BlogRepository {
     type Target = backbone_orm::GenericCrudRepository<Blog, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl BlogRepository {

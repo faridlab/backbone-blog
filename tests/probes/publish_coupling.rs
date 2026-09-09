@@ -24,21 +24,52 @@ use std::sync::Arc;
 use axum::{
     body::Body,
     http::{Request, StatusCode},
+    extract::Request as ExtractRequest,
+    middleware::{self, Next},
+    response::Response,
 };
 use tower::ServiceExt;
 
 use backbone_blog::application::service::notifier_port::RefusingPublishNotifier;
 use backbone_blog::presentation::http::{blog_admin_routes, BlogAdminState};
-use backbone_orm::company_scope::with_company_scope;
 
 use super::common::{
     audit_count, make_blog, make_post_draft, posts_with, preset_future_published_date,
-    probe_tenancy, TestDb,
+    probe_website, TestDb,
 };
+
+/// The probe officer: a fixed uuid so the admin verbs attribute audit
+/// rows to a parseable principal.
+const PROBE_OFFICER_ID: &str = "00000000-0000-0000-0000-00000000d001";
+
+/// The probe's identity layer: inserts the `OrgContext` the composing
+/// host's org session guard would. The guard itself is host-owned
+/// (ADR-0029 composition); the guarded handlers extract only this
+/// extension, so the probe stands in with it directly.
+async fn probe_org_context(
+    mut req: ExtractRequest,
+    next: Next,
+) -> Response {
+    req.extensions_mut().insert(backbone_auth::org::OrgContext {
+        acting_unit_id: PROBE_OFFICER_ID.parse().unwrap(),
+        entitled_units: Vec::new(),
+        legacy_company_id: None,
+        user_id: PROBE_OFFICER_ID.to_string(),
+    });
+    next.run(req).await
+}
+
+fn admin_app(db: &TestDb) -> axum::Router {
+    let state = BlogAdminState::new(
+        db.pool.clone(),
+        Arc::new(backbone_blog::application::service::notifier_port::RecordingNotifier::new()),
+        None,
+    );
+    blog_admin_routes(state).layer(middleware::from_fn(probe_org_context))
+}
 
 async fn patch_status(
     app: &axum::Router,
-    company: uuid::Uuid,
     post_id: uuid::Uuid,
     body: serde_json::Value,
 ) -> (StatusCode, serde_json::Value) {
@@ -48,9 +79,7 @@ async fn patch_status(
         .header("content-type", "application/json")
         .body(Body::from(body.to_string()))
         .unwrap();
-    let response = with_company_scope(Some(company), app.clone().oneshot(request))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(request).await.unwrap();
     let status = response.status();
     let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
         .await
@@ -62,16 +91,14 @@ async fn patch_status(
 #[tokio::test]
 async fn publish_flips_stamps_audits_once_and_notifies_once() {
     let db = TestDb::new("pubc").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let post_id = make_post_draft(&db, company, blog.id, "coupling-post").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let post_id = make_post_draft(&db, blog.id, "coupling-post").await;
 
     let notifier =
         Arc::new(backbone_blog::application::service::notifier_port::RecordingNotifier::new());
     let service = posts_with(&db, notifier.clone());
-    let outcome = with_company_scope(Some(company), service.publish(post_id, None))
-        .await
-        .unwrap();
+    let outcome = service.publish(post_id, None).await.unwrap();
 
     // 1a. The flip + the stamp.
     assert!(outcome.row.is_published, "publish must flip the flag");
@@ -93,9 +120,7 @@ async fn publish_flips_stamps_audits_once_and_notifies_once() {
     // 4. Re-publish: the guarded flip sees true → no-op success, no
     // re-stamp (the stamp is unchanged), no second audit, no re-notify.
     let before = outcome.row.published_date;
-    let again = with_company_scope(Some(company), service.publish(post_id, None))
-        .await
-        .unwrap();
+    let again = service.publish(post_id, None).await.unwrap();
     assert!(!again.changed, "re-publish must report the no-op");
     assert!(again.row.is_published);
     assert_eq!(again.row.published_date, before, "no re-stamp on the no-op");
@@ -107,9 +132,7 @@ async fn publish_flips_stamps_audits_once_and_notifies_once() {
     assert_eq!(notifier.calls().len(), 1, "no re-notify on the no-op");
 
     // 5. Unpublish retains the date as history.
-    let unpublished = with_company_scope(Some(company), service.unpublish(post_id, None))
-        .await
-        .unwrap();
+    let unpublished = service.unpublish(post_id, None).await.unwrap();
     assert!(!unpublished.is_published);
     assert!(
         unpublished.published_date.is_some(),
@@ -122,20 +145,18 @@ async fn publish_flips_stamps_audits_once_and_notifies_once() {
 #[tokio::test]
 async fn a_future_published_date_survives_the_stamp() {
     let db = TestDb::new("pubfut").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let post_id = make_post_draft(&db, company, blog.id, "future-stamp").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let post_id = make_post_draft(&db, blog.id, "future-stamp").await;
 
     // Pre-set the schedule: publish is asked to hold a FUTURE date.
-    preset_future_published_date(&db, company, post_id).await;
+    preset_future_published_date(&db, post_id).await;
 
     let service = posts_with(
         &db,
         Arc::new(backbone_blog::application::service::notifier_port::RecordingNotifier::new()),
     );
-    let outcome = with_company_scope(Some(company), service.publish(post_id, None))
-        .await
-        .unwrap();
+    let outcome = service.publish(post_id, None).await.unwrap();
     assert!(outcome.row.is_published);
     let stamped = outcome.row.published_date.unwrap();
     assert!(
@@ -149,21 +170,15 @@ async fn a_future_published_date_survives_the_stamp() {
 #[tokio::test]
 async fn patch_carrying_the_fence_pair_is_refused_and_audited() {
     let db = TestDb::new("pubfence").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let post_id = make_post_draft(&db, company, blog.id, "fenced-post").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let post_id = make_post_draft(&db, blog.id, "fenced-post").await;
 
-    let state = BlogAdminState::new(
-        db.pool.clone(),
-        Arc::new(backbone_blog::application::service::notifier_port::RecordingNotifier::new()),
-        None,
-    );
-    let app = blog_admin_routes(state);
+    let app = admin_app(&db);
 
     // The fence pair in a patch body → the typed refusal.
     let (status, body) = patch_status(
         &app,
-        company,
         post_id,
         serde_json::json!({ "is_published": true, "title": "smuggled" }),
     )
@@ -177,16 +192,13 @@ async fn patch_carrying_the_fence_pair_is_refused_and_audited() {
         &db,
         Arc::new(backbone_blog::application::service::notifier_port::RecordingNotifier::new()),
     );
-    let row = with_company_scope(Some(company), service.get(post_id))
-        .await
-        .unwrap();
+    let row = service.get(post_id).await.unwrap();
     assert_eq!(row.title, "Probe Post", "the refused patch wrote nothing");
     assert!(!row.is_published, "the fence held: still a draft");
 
     // A structurally-refused field answers the same typed refusal
     // (no `publish_refused` audit — it is not a publication attempt).
-    let (status, body) =
-        patch_status(&app, company, post_id, serde_json::json!({ "visits": 999 })).await;
+    let (status, body) = patch_status(&app, post_id, serde_json::json!({ "visits": 999 })).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(body["error"]["code"], "blog_field_not_patchable");
     assert_eq!(audit_count(&db, "publish_refused").await, 1);
@@ -197,14 +209,12 @@ async fn patch_carrying_the_fence_pair_is_refused_and_audited() {
 #[tokio::test]
 async fn a_refused_notify_parks_but_the_publish_commits() {
     let db = TestDb::new("pubpark").await;
-    let (company, view) = probe_tenancy();
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    let post_id = make_post_draft(&db, company, blog.id, "parked-post").await;
+    let view = probe_website();
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    let post_id = make_post_draft(&db, blog.id, "parked-post").await;
 
     let service = posts_with(&db, Arc::new(RefusingPublishNotifier::new()));
-    let outcome = with_company_scope(Some(company), service.publish(post_id, None))
-        .await
-        .unwrap();
+    let outcome = service.publish(post_id, None).await.unwrap();
     assert!(
         outcome.row.is_published,
         "publishing is not deliverable-contingent"

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::BlogAuditEvent;
 use crate::domain::entity::BlogAuditLog;
+use crate::domain::entity::BlogAuditEvent;
 
 // =============================================================================
 // Create DTO
@@ -32,21 +32,11 @@ use crate::domain::entity::BlogAuditLog;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateBlogAuditLogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "subject_type"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_type")]
     pub subject_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_id")]
     pub subject_id: Option<Uuid>,
@@ -70,21 +60,11 @@ pub struct CreateBlogAuditLogDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateBlogAuditLogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "subject_type"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_type")]
     pub subject_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_id")]
     pub subject_id: Option<Uuid>,
@@ -108,12 +88,6 @@ pub struct UpdateBlogAuditLogDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchBlogAuditLogDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub event: Option<BlogAuditEvent>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -133,13 +107,7 @@ pub struct PatchBlogAuditLogDto {
 impl PatchBlogAuditLogDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some()
-            || self.event.is_some()
-            || self.actor.is_some()
-            || self.subject_type.is_some()
-            || self.subject_id.is_some()
-            || self.detail.is_some()
-            || self.occurred_at.is_some()
+        self.event.is_some() || self.actor.is_some() || self.subject_type.is_some() || self.subject_id.is_some() || self.detail.is_some() || self.occurred_at.is_some()
     }
 }
 
@@ -155,16 +123,8 @@ impl PatchBlogAuditLogDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct BlogAuditLogResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     pub actor: Option<Uuid>,
     pub subject_type: Option<String>,
@@ -228,9 +188,9 @@ impl BlogAuditLogListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct BlogAuditLogSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     pub actor: Option<Uuid>,
+    pub subject_type: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -242,7 +202,6 @@ impl From<BlogAuditLog> for BlogAuditLogResponseDto {
     fn from(entity: BlogAuditLog) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             event: entity.event,
             actor: entity.actor,
             subject_type: entity.subject_type,
@@ -258,9 +217,9 @@ impl From<BlogAuditLog> for BlogAuditLogSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             event: entity.event,
             actor: entity.actor,
+            subject_type: entity.subject_type,
             created_at,
         }
     }
@@ -270,7 +229,6 @@ impl From<CreateBlogAuditLogDto> for BlogAuditLog {
     fn from(dto: CreateBlogAuditLogDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             event: dto.event,
             actor: dto.actor,
             subject_type: dto.subject_type,
@@ -285,7 +243,6 @@ impl From<&BlogAuditLog> for BlogAuditLogResponseDto {
     fn from(entity: &BlogAuditLog) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             event: entity.event.clone(),
             actor: entity.actor.clone(),
             subject_type: entity.subject_type.clone(),
@@ -304,7 +261,6 @@ impl backbone_core::FromCreateDto<CreateBlogAuditLogDto> for BlogAuditLog {
 
 impl backbone_core::ApplyUpdateDto<UpdateBlogAuditLogDto> for BlogAuditLog {
     fn apply_update(mut self, dto: UpdateBlogAuditLogDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.event = dto.event;
         self.actor = dto.actor;
         self.subject_type = dto.subject_type;

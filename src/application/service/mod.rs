@@ -7,8 +7,8 @@
 pub mod error;
 pub use error::{ServiceError, ServiceResult};
 
-pub mod blog_audit_log_service;
 pub mod blog_service;
+pub mod blog_audit_log_service;
 pub mod post_service;
 pub mod post_tag_service;
 pub mod post_view_receipt_service;
@@ -28,8 +28,8 @@ pub mod site_scope;
 pub mod visit_service;
 // END CUSTOM
 
-pub use blog_audit_log_service::BlogAuditLogService;
 pub use blog_service::BlogService;
+pub use blog_audit_log_service::BlogAuditLogService;
 pub use post_service::PostService;
 pub use post_tag_service::PostTagService;
 pub use post_view_receipt_service::PostViewReceiptService;

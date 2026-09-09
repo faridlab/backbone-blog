@@ -55,7 +55,9 @@ impl Seeder for SeedTagSeeder {
     }
 
     async fn rollback(&self, pool: &PgPool) -> Result<()> {
-        sqlx::query("DELETE FROM blog.tags").execute(pool).await?;
+        sqlx::query("DELETE FROM blog.tags")
+            .execute(pool)
+            .await?;
         Ok(())
     }
 }

@@ -3,11 +3,11 @@
 //!
 //! The module DOES NOT SELF-MOUNT: it exports
 //! [`blog_public_routes`], a plain `axum::Router` the composing host
-//! nests BARE of `company_auth` under the schema name —
+//! nests BARE of any session guard under the schema name —
 //! `Router::new().nest("/api/v1/blog", blog_public_routes(state))`.
-//! The public-tier fence (company + tier GUC), the capability token,
-//! and the fixed-window throttle are the wall; there is no session
-//! and no auth middleware here.
+//! The public-tier fence (the ambient org scope relay + the tier
+//! GUC), the capability token, and the fixed-window throttle are the
+//! wall; there is no session and no auth middleware here.
 //!
 //! The allowlist (exhaustive — the negative-enumeration probe's
 //! target):

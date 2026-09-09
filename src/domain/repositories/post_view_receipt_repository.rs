@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the PostViewReceipt aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::PostViewReceipt;
@@ -44,7 +44,6 @@ pub struct PostViewReceiptPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct PostViewReceiptFilter {
-    pub company_id: Option<Uuid>,
     pub post_id: Option<Uuid>,
     pub view_token: Option<String>,
 }
@@ -52,7 +51,7 @@ pub struct PostViewReceiptFilter {
 impl PostViewReceiptFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.post_id.is_some() || self.view_token.is_some()
+        self.post_id.is_some() || self.view_token.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl PostViewReceiptFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait PostViewReceiptRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -86,17 +86,10 @@ pub trait PostViewReceiptRepository: Send + Sync {
     // =========================================================================
 
     /// List post_view_receipt with pagination
-    async fn list(
-        &self,
-        params: PostViewReceiptPaginationParams,
-    ) -> Result<PostViewReceiptPaginatedResult>;
+    async fn list(&self, params: PostViewReceiptPaginationParams) -> Result<PostViewReceiptPaginatedResult>;
 
     /// List post_view_receipt with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: PostViewReceiptPaginationParams,
-        filters: PostViewReceiptFilter,
-    ) -> Result<PostViewReceiptPaginatedResult>;
+    async fn list_with_filters(&self, params: PostViewReceiptPaginationParams, filters: PostViewReceiptFilter) -> Result<PostViewReceiptPaginatedResult>;
 
     /// Count all post_view_receipt entities
     async fn count(&self) -> Result<u64>;

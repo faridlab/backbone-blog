@@ -5,18 +5,17 @@
 //! Returns an `EntityValidator<PostViewReceipt>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{RequiredString};
 use crate::domain::entity::PostViewReceipt;
-use backbone_core::RequiredString;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for PostViewReceipt entities.
 pub type PostViewReceiptValidator = EntityValidator<PostViewReceipt>;
 
 /// Build a validator for PostViewReceipt with all schema-defined field rules.
 pub fn post_view_receipt_validator() -> PostViewReceiptValidator {
-    EntityValidator::new().rule(RequiredString::new("view_token", |e: &PostViewReceipt| {
-        &e.view_token
-    }))
+    EntityValidator::new()
+        .rule(RequiredString::new("view_token", |e: &PostViewReceipt| &e.view_token))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the Blog aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::Blog;
@@ -44,7 +44,6 @@ pub struct BlogPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct BlogFilter {
-    pub company_id: Option<Uuid>,
     pub website_id: Option<Uuid>,
     pub name: Option<String>,
     pub subtitle: Option<String>,
@@ -54,11 +53,7 @@ pub struct BlogFilter {
 impl BlogFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some()
-            || self.website_id.is_some()
-            || self.name.is_some()
-            || self.subtitle.is_some()
-            || self.description.is_some()
+        self.website_id.is_some() || self.name.is_some() || self.subtitle.is_some() || self.description.is_some()
     }
 }
 
@@ -68,6 +63,7 @@ impl BlogFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait BlogRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -95,11 +91,7 @@ pub trait BlogRepository: Send + Sync {
     async fn list(&self, params: BlogPaginationParams) -> Result<BlogPaginatedResult>;
 
     /// List blog with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: BlogPaginationParams,
-        filters: BlogFilter,
-    ) -> Result<BlogPaginatedResult>;
+    async fn list_with_filters(&self, params: BlogPaginationParams, filters: BlogFilter) -> Result<BlogPaginatedResult>;
 
     /// Count all blog entities
     async fn count(&self) -> Result<u64>;

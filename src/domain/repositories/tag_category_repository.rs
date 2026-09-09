@@ -5,9 +5,8 @@
 //! This trait defines the repository contract for the TagCategory aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
-use uuid::Uuid;
+use anyhow::Result;
 
 use crate::domain::entity::TagCategory;
 
@@ -44,14 +43,13 @@ pub struct TagCategoryPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct TagCategoryFilter {
-    pub company_id: Option<Uuid>,
     pub name: Option<String>,
 }
 
 impl TagCategoryFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some()
+        self.name.is_some()
     }
 }
 
@@ -61,6 +59,7 @@ impl TagCategoryFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait TagCategoryRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -85,15 +84,10 @@ pub trait TagCategoryRepository: Send + Sync {
     // =========================================================================
 
     /// List tag_category with pagination
-    async fn list(&self, params: TagCategoryPaginationParams)
-        -> Result<TagCategoryPaginatedResult>;
+    async fn list(&self, params: TagCategoryPaginationParams) -> Result<TagCategoryPaginatedResult>;
 
     /// List tag_category with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: TagCategoryPaginationParams,
-        filters: TagCategoryFilter,
-    ) -> Result<TagCategoryPaginatedResult>;
+    async fn list_with_filters(&self, params: TagCategoryPaginationParams, filters: TagCategoryFilter) -> Result<TagCategoryPaginatedResult>;
 
     /// Count all tag_category entities
     async fn count(&self) -> Result<u64>;
@@ -115,10 +109,7 @@ pub trait TagCategoryRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<TagCategory>>;
 
     /// List soft-deleted tag_category entities
-    async fn list_deleted(
-        &self,
-        params: TagCategoryPaginationParams,
-    ) -> Result<TagCategoryPaginatedResult>;
+    async fn list_deleted(&self, params: TagCategoryPaginationParams) -> Result<TagCategoryPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

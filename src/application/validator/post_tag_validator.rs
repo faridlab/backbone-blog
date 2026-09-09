@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<PostTag>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::PostTag;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for PostTag entities.
 pub type PostTagValidator = EntityValidator<PostTag>;
@@ -16,7 +16,7 @@ pub fn post_tag_validator() -> PostTagValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-    // No schema-derived rules — add custom rules above.
+        // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

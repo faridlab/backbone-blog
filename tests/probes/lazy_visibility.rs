@@ -20,30 +20,29 @@ use backbone_blog::infrastructure::persistence::public_query_repository::{
     AdminState, ListingOrder, PublicQueryRepository,
 };
 use backbone_blog::infrastructure::persistence::tag_command_repository::normalize_slug;
-use backbone_orm::company_scope::with_company_scope;
 
 use super::common::{
-    backdate_post, make_blog, make_post_future, make_post_visible, make_tag, probe_tenancy,
+    backdate_post, make_blog, make_post_future, make_post_visible, make_tag, probe_website,
     tag_post, StubSurface, TestDb, PROBE_HOST,
 };
 
 #[tokio::test]
 async fn future_posts_are_invisible_publicly_visible_adminly_and_lazily_arrive() {
     let db = TestDb::new("lazyv").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
     let blog_slug = normalize_slug(&blog.name);
 
     // One VISIBLE post (the older sibling the nav arm reads) + one
     // FUTURE published post (is_published = true, post_date a day out).
-    let visible_id = make_post_visible(&db, company, blog.id, "visible-post").await;
-    let future_id = make_post_future(&db, company, blog.id, "future-post").await;
+    let visible_id = make_post_visible(&db, blog.id, "visible-post").await;
+    let future_id = make_post_future(&db, blog.id, "future-post").await;
     // Each carries a DISTINCT tag so the cloud arm is observable.
-    let visible_tag = make_tag(&db, company, "Visible Only").await;
-    let future_tag = make_tag(&db, company, "Future Only").await;
-    tag_post(&db, company, visible_id, &[visible_tag.id]).await;
-    tag_post(&db, company, future_id, &[future_tag.id]).await;
+    let visible_tag = make_tag(&db, "Visible Only").await;
+    let future_tag = make_tag(&db, "Future Only").await;
+    tag_post(&db, visible_id, &[visible_tag.id]).await;
+    tag_post(&db, future_id, &[future_tag.id]).await;
 
     let public_queries = PublicQueryService::new(db.pool.clone(), surface.clone());
 
@@ -97,34 +96,30 @@ async fn future_posts_are_invisible_publicly_visible_adminly_and_lazily_arrive()
     let nav = detail.nav_next.unwrap();
     assert_eq!(nav.id, visible_id, "nav never points at a future post");
 
-    // ADMIN: the same role family SEES the future row (the
+    // ADMIN: the same read surface SEES the future row (the
     // employees-see-everything posture).
     let queries = PublicQueryRepository::new(db.pool.clone());
-    let (rows, counts) = with_company_scope(
-        Some(company),
-        queries.admin_list_posts(AdminState::All, None, 100),
-    )
-    .await
-    .unwrap();
+    let (rows, counts) = queries
+        .admin_list_posts(AdminState::All, None, 100)
+        .await
+        .unwrap();
     assert_eq!(rows.len(), 2, "admin sees both rows");
     assert_eq!(counts.published, 1, "future-aware: published ≡ visible");
     assert_eq!(
         counts.unpublished, 1,
         "a future-dated published post counts as UNPUBLISHED in the split"
     );
-    let (unpublished_rows, _) = with_company_scope(
-        Some(company),
-        queries.admin_list_posts(AdminState::Unpublished, None, 100),
-    )
-    .await
-    .unwrap();
+    let (unpublished_rows, _) = queries
+        .admin_list_posts(AdminState::Unpublished, None, 100)
+        .await
+        .unwrap();
     assert_eq!(unpublished_rows.len(), 1);
     assert_eq!(unpublished_rows[0].id, future_id);
 
     // THE LAZY ARRIVAL: backdate the post (the sanctioned shortcut —
     // scoped SQL standing in for time passing; no cron ran, no writer
     // fired) and the SAME row is publicly visible through every arm.
-    backdate_post(&db, company, future_id).await;
+    backdate_post(&db, future_id).await;
     let answer = public_queries
         .listing(PROBE_HOST, &blog_slug, None, 1, ListingOrder::Recent, None)
         .await

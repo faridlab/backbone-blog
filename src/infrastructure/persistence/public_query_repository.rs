@@ -2,15 +2,16 @@
 //! `metaphor.codegen.yaml`) — SPEC sections 4.3/4.4/5.
 //!
 //! Every PUBLIC method opens ONE transaction and binds the PUBLIC
-//! scope FIRST (`bind_public_scope`: company + `app.blog_tier`) —
-//! then composes the visibility predicate (`is_published AND
-//! post_date <= now() AND archived_at IS NULL AND not soft-deleted`)
-//! EXPLICITLY in the query text. Belt and suspenders: the predicate
-//! is the honest read; the restrictive policy double-enforces it at
-//! the DB for public connections even if a predicate were forgotten.
-//! The ADMIN methods bind the plain company scope and compose NO
-//! visibility predicate (the declared "employees see everything"
-//! posture — SPEC section 2.3).
+//! scope FIRST (`bind_public_scope`: the ambient org scope relayed
+//! onto the transaction + the `app.blog_tier` mark) — then composes
+//! the visibility predicate (`is_published AND post_date <= now() AND
+//! archived_at IS NULL AND not soft-deleted`) EXPLICITLY in the query
+//! text. Belt and suspenders: the predicate is the honest read; the
+//! restrictive policy double-enforces it at the DB for public
+//! connections even if a predicate were forgotten. The ADMIN methods
+//! relay the ambient org scope and compose NO visibility predicate
+//! (the declared "employees see everything" posture — SPEC section
+//! 2.3).
 //!
 //! Pagination note (the port decision): the listing walks the
 //! `(post_date DESC, id DESC)` order the composite index keys, served
@@ -21,11 +22,13 @@
 use serde_json::Value as Json;
 use sqlx::PgPool;
 use uuid::Uuid;
+use super::scoped_read;
 
-use backbone_orm::company_scope;
 
 use crate::application::service::blog_error::BlogResult;
 use crate::application::service::site_scope::bind_public_scope;
+
+use super::blog_command_repository::bind_ambient_org_scope;
 
 /// The Odoo listing page grain.
 pub const PAGE_SIZE: i64 = 12;
@@ -166,9 +169,9 @@ impl PublicQueryRepository {
     }
 
     /// The live blogs of the website (public tier).
-    pub async fn list_blogs(&self, company: Uuid, website_id: Uuid) -> BlogResult<Vec<PublicBlog>> {
+    pub async fn list_blogs(&self, website_id: Uuid) -> BlogResult<Vec<PublicBlog>> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
+        bind_public_scope(&mut tx).await?;
         let blogs = sqlx::query_as::<_, PublicBlog>(
             "SELECT id, name, subtitle, description FROM blog.blogs
               WHERE website_id = $1
@@ -187,13 +190,12 @@ impl PublicQueryRepository {
     /// filter + order + search, fixed 12-row pages.
     pub async fn listing(
         &self,
-        company: Uuid,
         website_id: Uuid,
         blog_id: Uuid,
         query: &ListingQuery,
     ) -> BlogResult<ListingPage> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
+        bind_public_scope(&mut tx).await?;
         let page = query.page.max(1);
         let offset = (page - 1) * PAGE_SIZE;
 
@@ -286,13 +288,12 @@ impl PublicQueryRepository {
     /// service asks the redirect seam once before refusing).
     pub async fn detail(
         &self,
-        company: Uuid,
         website_id: Uuid,
         blog_id: Uuid,
         post_slug: &str,
     ) -> BlogResult<Option<PublicPostDetail>> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
+        bind_public_scope(&mut tx).await?;
         let visible_p = visible("p");
         let row: Option<DetailRow> = sqlx::query_as::<_, DetailRow>(&format!(
             "SELECT p.id, p.blog_id, p.title, p.slug, p.content, p.teaser, p.cover, p.author_name,
@@ -339,13 +340,12 @@ impl PublicQueryRepository {
     /// joins the full set.
     pub async fn cloud_public(
         &self,
-        company: Uuid,
         website_id: Uuid,
         blog_id: Uuid,
         min_limit: i64,
     ) -> BlogResult<Vec<CloudEntry>> {
         let mut tx = self.pool.begin().await?;
-        bind_public_scope(&mut tx, company).await?;
+        bind_public_scope(&mut tx).await?;
         let entries = sqlx::query_as::<_, CloudEntry>(
             "SELECT t.id, t.name, t.slug, count(*) AS post_count
                FROM blog.tags t
@@ -369,10 +369,10 @@ impl PublicQueryRepository {
     }
 
     /// The admin tag cloud (the full set — no visibility predicate,
-    /// plain company scope).
+    /// the ambient org scope relayed onto the transaction).
     pub async fn cloud_admin(&self, blog_id: Uuid, min_limit: i64) -> BlogResult<Vec<CloudEntry>> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let entries = sqlx::query_as::<_, CloudEntry>(
             "SELECT t.id, t.name, t.slug, count(*) AS post_count
                FROM blog.tags t
@@ -411,7 +411,7 @@ impl PublicQueryRepository {
                 "AND NOT (is_published AND post_date <= now() AND archived_at IS NULL)"
             }
         };
-        let rows = backbone_orm::company_scope::fetch_all_scoped(
+        let rows = scoped_read::fetch_all(
             &self.pool,
             sqlx::query_as::<_, ListingItem>(&format!(
                 "SELECT id, blog_id, title, slug, teaser, cover, author_name, post_date, visits
@@ -433,7 +433,7 @@ impl PublicQueryRepository {
     /// Future-aware split counts for the admin listing (same query
     /// family, no visibility state filter).
     pub async fn state_counts(&self, blog_id: Option<Uuid>) -> BlogResult<StateCounts> {
-        let (published, unpublished): (i64, i64) = backbone_orm::company_scope::fetch_one_scoped(
+        let (published, unpublished): (i64, i64) = scoped_read::fetch_one(
             &self.pool,
             sqlx::query_as(
                 "SELECT

@@ -55,7 +55,9 @@ impl Seeder for SeedPostSeeder {
     }
 
     async fn rollback(&self, pool: &PgPool) -> Result<()> {
-        sqlx::query("DELETE FROM blog.posts").execute(pool).await?;
+        sqlx::query("DELETE FROM blog.posts")
+            .execute(pool)
+            .await?;
         Ok(())
     }
 }

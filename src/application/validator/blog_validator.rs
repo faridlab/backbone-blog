@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<Blog>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::Blog;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{OptionalNotBlank, RequiredString};
+use crate::domain::entity::Blog;
 
 /// Validator type alias for Blog entities.
 pub type BlogValidator = EntityValidator<Blog>;
@@ -16,12 +16,8 @@ pub type BlogValidator = EntityValidator<Blog>;
 pub fn blog_validator() -> BlogValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &Blog| &e.name))
-        .rule(OptionalNotBlank::new("subtitle", |e: &Blog| {
-            e.subtitle.as_deref()
-        }))
-        .rule(OptionalNotBlank::new("description", |e: &Blog| {
-            e.description.as_deref()
-        }))
+        .rule(OptionalNotBlank::new("subtitle", |e: &Blog| e.subtitle.as_deref()))
+        .rule(OptionalNotBlank::new("description", |e: &Blog| e.description.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

@@ -17,7 +17,7 @@
 //! - unpublish (flip false, stamp retained);
 //! - the one-way archive pair (forced unpublish embedded; unarchive
 //!   NEVER re-publishes);
-//! - the tag set verb (resolved, company-scoped ids only).
+//! - the tag set verb (resolved ids only).
 
 use serde_json::json;
 use uuid::Uuid;
@@ -133,7 +133,9 @@ impl PostCommandService {
     /// commits.
     pub async fn publish(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<PublishResult> {
         let mut tx = self.posts.begin().await?;
-        backbone_orm::company_scope::bind_current_company(&mut tx).await?;
+        if let Some(scope) = backbone_orm::org_scope::current_org_scope() {
+            backbone_orm::org_scope::bind_org_scope_on(&mut *tx, &scope).await?;
+        }
         let outcome = self.posts.publish_flip(&mut tx, id, actor).await?;
         if outcome.changed {
             match self
@@ -156,7 +158,6 @@ impl PostCommandService {
                     );
                     record_audit(
                         &mut tx,
-                        outcome.row.company_id,
                         "notify_parked",
                         actor,
                         "post",
@@ -189,8 +190,9 @@ impl PostCommandService {
         self.posts.unarchive(id, actor).await
     }
 
-    /// Set the post's tag list: slugs are resolved company-scoped
-    /// (D8: lookup, never trust); an unknown slug is the uniform 404.
+    /// Set the post's tag list: tag ids are resolved under the
+    /// ambient scope by the caller (D8: lookup, never trust); an
+    /// unknown id is the uniform 404.
     pub async fn set_tags(
         &self,
         post_id: Uuid,

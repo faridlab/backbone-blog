@@ -31,7 +31,7 @@ use backbone_blog::presentation::http::{
 };
 
 use super::common::{
-    make_blog, make_post_visible, probe_tenancy, StubSurface, TestDb, PROBE_HOST, PROBE_SECRET,
+    make_blog, make_post_visible, probe_website, StubSurface, TestDb, PROBE_HOST, PROBE_SECRET,
 };
 
 async fn get(app: &axum::Router, path: &str, host: &str) -> (StatusCode, Vec<u8>) {
@@ -69,10 +69,10 @@ async fn post_visit(app: &axum::Router, path: &str, host: &str) -> (StatusCode, 
 #[tokio::test]
 async fn the_public_tree_is_exactly_five_paths_and_the_host_binding_has_no_fallback() {
     let db = TestDb::new("pubfence").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    make_post_visible(&db, company, blog.id, "live-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    make_post_visible(&db, blog.id, "live-post").await;
 
     let state = BlogPublicState::with_secret(db.pool.clone(), surface, PROBE_SECRET.to_string());
     let app = blog_public_routes(state);
@@ -161,10 +161,10 @@ async fn the_public_tree_is_exactly_five_paths_and_the_host_binding_has_no_fallb
 #[tokio::test]
 async fn an_unset_secret_fails_the_visit_verb_closed_and_leaves_gets_alone() {
     let db = TestDb::new("pubsecret").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
-    make_post_visible(&db, company, blog.id, "live-post").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
+    make_post_visible(&db, blog.id, "live-post").await;
 
     // The secret is EMPTY — the fail-closed posture.
     let state = BlogPublicState::with_secret(db.pool.clone(), surface, String::new());

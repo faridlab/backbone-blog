@@ -11,15 +11,9 @@ use super::BlogAuditEvent;
 pub struct BlogAuditLogId(pub Uuid);
 
 impl BlogAuditLogId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for BlogAuditLogId {
@@ -36,34 +30,25 @@ impl std::str::FromStr for BlogAuditLogId {
 }
 
 impl From<Uuid> for BlogAuditLogId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<BlogAuditLogId> for Uuid {
-    fn from(id: BlogAuditLogId) -> Self {
-        id.0
-    }
+    fn from(id: BlogAuditLogId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for BlogAuditLogId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for BlogAuditLogId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct BlogAuditLog {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub event: BlogAuditEvent,
     pub actor: Option<Uuid>,
     pub subject_type: Option<String>,
@@ -79,10 +64,9 @@ impl BlogAuditLog {
     }
 
     /// Create a new BlogAuditLog with required fields
-    pub fn new(company_id: Uuid, event: BlogAuditEvent, occurred_at: DateTime<Utc>) -> Self {
+    pub fn new(event: BlogAuditEvent, occurred_at: DateTime<Utc>) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             event,
             actor: None,
             subject_type: None,
@@ -101,6 +85,7 @@ impl BlogAuditLog {
     pub fn typed_id(&self) -> BlogAuditLogId {
         BlogAuditLogId(self.id)
     }
+
 
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
@@ -138,40 +123,23 @@ impl BlogAuditLog {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
-                }
                 "event" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.event = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.event = v; }
                 }
                 "actor" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.actor = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.actor = v; }
                 }
                 "subject_type" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subject_type = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subject_type = v; }
                 }
                 "subject_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subject_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subject_id = v; }
                 }
                 "detail" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.detail = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.detail = v; }
                 }
                 "occurred_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.occurred_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.occurred_at = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -227,16 +195,12 @@ impl backbone_orm::EntityRepoMeta for BlogAuditLog {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("subject_id".to_string(), "uuid".to_string());
         m.insert("event".to_string(), "blog_audit_event".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -246,7 +210,6 @@ impl backbone_orm::EntityRepoMeta for BlogAuditLog {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct BlogAuditLogBuilder {
-    company_id: Option<Uuid>,
     event: Option<BlogAuditEvent>,
     actor: Option<Uuid>,
     subject_type: Option<String>,
@@ -256,12 +219,6 @@ pub struct BlogAuditLogBuilder {
 }
 
 impl BlogAuditLogBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the event field (required)
     pub fn event(mut self, value: BlogAuditEvent) -> Self {
         self.event = Some(value);
@@ -302,14 +259,10 @@ impl BlogAuditLogBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<BlogAuditLog, String> {
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
         let event = self.event.ok_or_else(|| "event is required".to_string())?;
 
         Ok(BlogAuditLog {
             id: Uuid::new_v4(),
-            company_id,
             event,
             actor: self.actor,
             subject_type: self.subject_type,

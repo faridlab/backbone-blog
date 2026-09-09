@@ -4,8 +4,8 @@
 //!
 //! Uses backbone-orm's `DatabaseOperations<T>` trait.
 
-mod blog_audit_log_repository;
 mod blog_repository;
+mod blog_audit_log_repository;
 mod post_repository;
 mod post_tag_repository;
 mod post_view_receipt_repository;
@@ -16,17 +16,22 @@ mod tag_repository;
 // <<< CUSTOM
 // The hand repositories (user-owned — see metaphor.codegen.yaml): the
 // transactional SQL the verb services compose. Services hold no raw
-// sqlx; every transactional method binds the company scope first.
+// sqlx; every transactional method relays the ambient org scope onto
+// its transaction first (the composing service's fence, when one is
+// resolved).
 pub mod blog_command_repository;
 pub mod post_command_repository;
 pub mod public_query_repository;
+// Shared read transport for the module's own tables: ambient-scope-bound transactions
+// (the composing service's fence, when one is resolved).
+pub mod scoped_read;
 pub mod tag_command_repository;
 pub mod visit_command_repository;
 // END CUSTOM
 
 // Re-exports
-pub use blog_audit_log_repository::BlogAuditLogRepository;
 pub use blog_repository::BlogRepository;
+pub use blog_audit_log_repository::BlogAuditLogRepository;
 pub use post_repository::PostRepository;
 pub use post_tag_repository::PostTagRepository;
 pub use post_view_receipt_repository::PostViewReceiptRepository;
@@ -35,8 +40,9 @@ pub use tag_repository::TagRepository;
 
 // Re-export backbone-orm types
 pub use backbone_orm::repository::{
-    DatabaseOperations, FilterCondition, FilterParams, PaginatedResult, PaginationInfo,
-    PaginationParams, PostgresRepository, SortDirection, SortParams,
+    DatabaseOperations, PostgresRepository,
+    PaginationParams, PaginationInfo, PaginatedResult,
+    FilterParams, FilterCondition, SortParams, SortDirection,
 };
 
 // Re-export custom persistence types

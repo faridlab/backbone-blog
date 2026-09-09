@@ -1,13 +1,22 @@
 //! The post verb repository (hand-written; user-owned; see
 //! `metaphor.codegen.yaml`).
 //!
-//! RLS LAW: every transactional method begins with
-//! `pool.begin()` + `company_scope::bind_current_company`. The ONE
-//! publish coupling runs on a CALLER-OWNED transaction
+//! Tenancy (ADR-0029): the module ships no tenant key and installs no
+//! fence — the composing service's tenancy decorator owns `org_unit_id`,
+//! the RLS policy, and the per-unit uniques. Every transactional method
+//! therefore begins with `pool.begin()` + [`bind_ambient_org_scope`]
+//! (the composing service's ambient request scope, when one is
+//! resolved, relayed onto the transaction so the decorator's fence
+//! governs every statement that follows; unfenced deployments run
+//! plainly). Direct-pool statements go through the scoped fetch
+//! helpers, which ride the request connection when one is bound.
+//!
+//! The ONE publish coupling runs on a CALLER-OWNED transaction
 //! ([`PostCommandRepository::publish_flip`]) so the service can fire
-//! the notifier port and park its refusal INSIDE the same
-//! transaction (SPEC section 4.1: the audit row IS the event; a
-//! parked notify is an audit row, never a rollback).
+//! the notifier port and park its refusal INSIDE the same transaction
+//! (SPEC section 4.1: the audit row IS the event; a parked notify is
+//! an audit row, never a rollback). The service binds the ambient org
+//! scope on that transaction before driving the flip.
 //!
 //! The patch input struct carries NO `is_published`/`published_date`
 //! arms — the fence is structural: no generic patch path can write
@@ -17,21 +26,18 @@ use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
-
 use crate::application::service::blog_error::{map_unique_violation, BlogError, BlogResult};
 
-use super::blog_command_repository::record_audit;
+use super::blog_command_repository::{bind_ambient_org_scope, record_audit};
 
-const POST_COLUMNS: &str = "id, company_id, blog_id, website_id, title, slug, content, teaser, \
-     cover, author_officer, author_name, is_published, published_date, post_date, visits, \
+const POST_COLUMNS: &str = "id, blog_id, website_id, title, slug, content, teaser, cover, \
+     author_officer, author_name, is_published, published_date, post_date, visits, \
      allow_comments, archived_at, archived_by_blog_id";
 
 /// A post row as the verbs read/write it.
 #[derive(Debug, Clone, serde::Serialize, sqlx::FromRow)]
 pub struct PostRow {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub blog_id: Uuid,
     pub website_id: Uuid,
     pub title: String,
@@ -55,7 +61,6 @@ pub struct PostRow {
 /// column; the H1a constraint trigger is the wall).
 #[derive(Debug, Clone)]
 pub struct CreatePostInput {
-    pub company_id: Uuid,
     pub blog_id: Uuid,
     pub title: String,
     pub slug: String,
@@ -103,7 +108,7 @@ impl PostCommandRepository {
     }
 
     /// Open a transaction for the caller-owned publish coupling flow
-    /// (the service binds the company scope, drives
+    /// (the service binds the ambient org scope, drives
     /// [`Self::publish_flip`], fires the notifier port, and commits).
     pub async fn begin(&self) -> Result<sqlx::Transaction<'static, sqlx::Postgres>, sqlx::Error> {
         self.pool.begin().await
@@ -118,7 +123,7 @@ impl PostCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<PostRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let website_id: Uuid = sqlx::query_scalar(
             "SELECT website_id FROM blog.blogs
               WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
@@ -129,12 +134,11 @@ impl PostCommandRepository {
         .ok_or(BlogError::NotFound)?;
         let row: PostRow = match sqlx::query_as::<_, PostRow>(&format!(
             "INSERT INTO blog.posts
-                 (id, company_id, blog_id, website_id, title, slug, content, teaser, cover,
+                 (id, blog_id, website_id, title, slug, content, teaser, cover,
                   author_officer, author_name, post_date, allow_comments)
-             VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
              RETURNING {POST_COLUMNS}"
         ))
-        .bind(input.company_id)
         .bind(input.blog_id)
         .bind(website_id)
         .bind(&input.title)
@@ -153,8 +157,7 @@ impl PostCommandRepository {
             Err(e) => return Err(map_unique_violation(e)),
         };
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "post_created",
             actor,
             "post",
@@ -169,7 +172,7 @@ impl PostCommandRepository {
     /// One post by id (admin read; all states).
     pub async fn get(&self, id: Uuid) -> BlogResult<PostRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let row = sqlx::query_as::<_, PostRow>(&format!(
             "SELECT {POST_COLUMNS} FROM blog.posts
               WHERE id = $1 AND metadata->>'deleted_at' IS NULL"
@@ -192,7 +195,7 @@ impl PostCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<(PostRow, Option<String>)> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let before_slug: Option<String> = sqlx::query_scalar(
             "SELECT slug FROM blog.posts WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
         )
@@ -236,8 +239,7 @@ impl PostCommandRepository {
             None
         };
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "post_updated",
             actor,
             "post",
@@ -306,7 +308,6 @@ impl PostCommandRepository {
         let future_survived = prior_date.map(|d| d > chrono::Utc::now()).unwrap_or(false);
         record_audit(
             tx,
-            row.company_id,
             "post_published",
             actor,
             "post",
@@ -326,7 +327,7 @@ impl PostCommandRepository {
     /// the no-op).
     pub async fn unpublish(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<PostRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         // Guarded: only a currently-published row transitions (and
         // audits).
         let transitioned: Option<PostRow> = sqlx::query_as::<_, PostRow>(&format!(
@@ -340,8 +341,7 @@ impl PostCommandRepository {
         let row = match transitioned {
             Some(row) => {
                 record_audit(
-                    &mut tx,
-                    row.company_id,
+                    &mut *tx,
                     "post_unpublished",
                     actor,
                     "post",
@@ -370,7 +370,7 @@ impl PostCommandRepository {
     /// FOR UPDATE first — the returning row alone cannot tell).
     pub async fn archive(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<PostRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let live: Option<bool> = sqlx::query_scalar(
             "SELECT is_published FROM blog.posts
               WHERE id = $1 AND archived_at IS NULL
@@ -411,8 +411,7 @@ impl PostCommandRepository {
         .fetch_one(&mut *tx)
         .await?;
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "post_archived",
             actor,
             "post",
@@ -429,7 +428,7 @@ impl PostCommandRepository {
     /// re-publishes except the publish verb).
     pub async fn unarchive(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<PostRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let row: PostRow = sqlx::query_as::<_, PostRow>(&format!(
             "UPDATE blog.posts SET archived_at = NULL
                WHERE id = $1 AND metadata->>'deleted_at' IS NULL
@@ -440,8 +439,7 @@ impl PostCommandRepository {
         .await?
         .ok_or(BlogError::NotFound)?;
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "post_unarchived",
             actor,
             "post",
@@ -455,9 +453,8 @@ impl PostCommandRepository {
 
     /// Record a `publish_refused` audit fact (the route's fence arm —
     /// SPEC section 4.1): a refused PATCH is a durable fact even
-    /// though nothing was written. The post's company is read under
-    /// the bound scope; an unknown post id records nothing (the typed
-    /// 404 answers for itself).
+    /// though nothing was written. An unknown post id records nothing
+    /// (the typed 404 answers for itself).
     pub async fn audit_fence_refusal(
         &self,
         id: Uuid,
@@ -465,16 +462,15 @@ impl PostCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<()> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let company: Option<Uuid> =
-            sqlx::query_scalar("SELECT company_id FROM blog.posts WHERE id = $1")
+        bind_ambient_org_scope(&mut *tx).await?;
+        let exists: Option<i32> =
+            sqlx::query_scalar("SELECT 1 FROM blog.posts WHERE id = $1 AND metadata->>'deleted_at' IS NULL")
                 .bind(id)
                 .fetch_optional(&mut *tx)
                 .await?;
-        if let Some(company) = company {
+        if exists.is_some() {
             record_audit(
-                &mut tx,
-                company,
+                &mut *tx,
                 "publish_refused",
                 actor,
                 "post",
@@ -489,8 +485,8 @@ impl PostCommandRepository {
 
     /// Replace the post's tag set (the PUT verb): delete + insert in
     /// one statement family, inside one transaction. Tag ids were
-    /// already resolved company-scoped by the service (D8: lookup,
-    /// never trust).
+    /// already resolved through the ambient scope by the service
+    /// (D8: lookup, never trust).
     pub async fn set_tags(
         &self,
         post_id: Uuid,
@@ -498,25 +494,16 @@ impl PostCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<Vec<Uuid>> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let company: Uuid = sqlx::query_scalar(
-            "SELECT company_id FROM blog.posts
-              WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
-        )
-        .bind(post_id)
-        .fetch_optional(&mut *tx)
-        .await?
-        .ok_or(BlogError::NotFound)?;
+        bind_ambient_org_scope(&mut *tx).await?;
         sqlx::query("DELETE FROM blog.post_tags WHERE post_id = $1")
             .bind(post_id)
             .execute(&mut *tx)
             .await?;
         for tag_id in tag_ids {
             match sqlx::query(
-                "INSERT INTO blog.post_tags (id, company_id, post_id, tag_id)
-                 VALUES (gen_random_uuid(), $1, $2, $3)",
+                "INSERT INTO blog.post_tags (id, post_id, tag_id)
+                 VALUES (gen_random_uuid(), $1, $2)",
             )
-            .bind(company)
             .bind(post_id)
             .bind(tag_id)
             .execute(&mut *tx)
@@ -527,8 +514,7 @@ impl PostCommandRepository {
             }
         }
         record_audit(
-            &mut tx,
-            company,
+            &mut *tx,
             "post_updated",
             actor,
             "post",

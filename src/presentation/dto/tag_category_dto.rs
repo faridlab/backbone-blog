@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::TagCategory;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,12 +32,6 @@ use crate::domain::entity::TagCategory;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateTagCategoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -56,12 +50,6 @@ pub struct CreateTagCategoryDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateTagCategoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -80,12 +68,6 @@ pub struct UpdateTagCategoryDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchTagCategoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -95,7 +77,7 @@ pub struct PatchTagCategoryDto {
 impl PatchTagCategoryDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some()
+        self.name.is_some()
     }
 }
 
@@ -111,16 +93,8 @@ impl PatchTagCategoryDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct TagCategoryResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     pub metadata: AuditMetadata,
@@ -180,7 +154,6 @@ impl TagCategoryListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct TagCategorySummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
     pub created_at: Option<DateTime<Utc>>,
 }
@@ -193,7 +166,6 @@ impl From<TagCategory> for TagCategoryResponseDto {
     fn from(entity: TagCategory) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             metadata: entity.metadata,
         }
@@ -205,7 +177,6 @@ impl From<TagCategory> for TagCategorySummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             created_at,
         }
@@ -216,7 +187,6 @@ impl From<CreateTagCategoryDto> for TagCategory {
     fn from(dto: CreateTagCategoryDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             name: dto.name,
             metadata: AuditMetadata::default(),
         }
@@ -227,7 +197,6 @@ impl From<&TagCategory> for TagCategoryResponseDto {
     fn from(entity: &TagCategory) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             name: entity.name.clone(),
             metadata: entity.metadata.clone(),
         }
@@ -242,7 +211,6 @@ impl backbone_core::FromCreateDto<CreateTagCategoryDto> for TagCategory {
 
 impl backbone_core::ApplyUpdateDto<UpdateTagCategoryDto> for TagCategory {
     fn apply_update(mut self, dto: UpdateTagCategoryDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.name = dto.name;
         Ok(self)
     }

@@ -23,9 +23,7 @@ pub struct BlogAuditLogRepository(
 
 impl std::ops::Deref for BlogAuditLogRepository {
     type Target = backbone_orm::GenericCrudRepository<BlogAuditLog, backbone_orm::HardDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl BlogAuditLogRepository {

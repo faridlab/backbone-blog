@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<Post>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::Post;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, OptionalNotBlank, RequiredString};
+use crate::domain::entity::Post;
 
 /// Validator type alias for Post entities.
 pub type PostValidator = EntityValidator<Post>;
@@ -17,15 +17,9 @@ pub fn post_validator() -> PostValidator {
     EntityValidator::new()
         .rule(RequiredString::new("title", |e: &Post| &e.title))
         .rule(RequiredString::new("slug", |e: &Post| &e.slug))
-        .rule(OptionalNotBlank::new("content", |e: &Post| {
-            e.content.as_deref()
-        }))
-        .rule(OptionalNotBlank::new("teaser", |e: &Post| {
-            e.teaser.as_deref()
-        }))
-        .rule(OptionalNotBlank::new("author_name", |e: &Post| {
-            e.author_name.as_deref()
-        }))
+        .rule(OptionalNotBlank::new("content", |e: &Post| e.content.as_deref()))
+        .rule(OptionalNotBlank::new("teaser", |e: &Post| e.teaser.as_deref()))
+        .rule(OptionalNotBlank::new("author_name", |e: &Post| e.author_name.as_deref()))
         .rule(NonNegative::new("visits", |e: &Post| e.visits as i64))
     // <<< CUSTOM RULES
     // END CUSTOM RULES

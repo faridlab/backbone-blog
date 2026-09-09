@@ -5,16 +5,17 @@
 //! Returns an `EntityValidator<TagCategory>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{RequiredString};
 use crate::domain::entity::TagCategory;
-use backbone_core::RequiredString;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for TagCategory entities.
 pub type TagCategoryValidator = EntityValidator<TagCategory>;
 
 /// Build a validator for TagCategory with all schema-defined field rules.
 pub fn tag_category_validator() -> TagCategoryValidator {
-    EntityValidator::new().rule(RequiredString::new("name", |e: &TagCategory| &e.name))
+    EntityValidator::new()
+        .rule(RequiredString::new("name", |e: &TagCategory| &e.name))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

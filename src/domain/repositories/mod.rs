@@ -5,8 +5,9 @@
 //! DDD Repository traits - define persistence contracts for aggregates.
 //! Implementations should be in the infrastructure layer.
 
-pub mod blog_audit_log_repository;
+
 pub mod blog_repository;
+pub mod blog_audit_log_repository;
 pub mod post_repository;
 pub mod post_tag_repository;
 pub mod post_view_receipt_repository;
@@ -14,21 +15,45 @@ pub mod tag_category_repository;
 pub mod tag_repository;
 
 // Re-exports
-pub use blog_audit_log_repository::{
-    BlogAuditLogFilter, BlogAuditLogPaginatedResult, BlogAuditLogPaginationParams,
-    BlogAuditLogRepository,
+pub use blog_repository::{
+    BlogRepository,
+    BlogPaginationParams,
+    BlogPaginatedResult,
+    BlogFilter,
 };
-pub use blog_repository::{BlogFilter, BlogPaginatedResult, BlogPaginationParams, BlogRepository};
-pub use post_repository::{PostFilter, PostPaginatedResult, PostPaginationParams, PostRepository};
+pub use blog_audit_log_repository::{
+    BlogAuditLogRepository,
+    BlogAuditLogPaginationParams,
+    BlogAuditLogPaginatedResult,
+    BlogAuditLogFilter,
+};
+pub use post_repository::{
+    PostRepository,
+    PostPaginationParams,
+    PostPaginatedResult,
+    PostFilter,
+};
 pub use post_tag_repository::{
-    PostTagFilter, PostTagPaginatedResult, PostTagPaginationParams, PostTagRepository,
+    PostTagRepository,
+    PostTagPaginationParams,
+    PostTagPaginatedResult,
+    PostTagFilter,
 };
 pub use post_view_receipt_repository::{
-    PostViewReceiptFilter, PostViewReceiptPaginatedResult, PostViewReceiptPaginationParams,
     PostViewReceiptRepository,
+    PostViewReceiptPaginationParams,
+    PostViewReceiptPaginatedResult,
+    PostViewReceiptFilter,
 };
 pub use tag_category_repository::{
-    TagCategoryFilter, TagCategoryPaginatedResult, TagCategoryPaginationParams,
     TagCategoryRepository,
+    TagCategoryPaginationParams,
+    TagCategoryPaginatedResult,
+    TagCategoryFilter,
 };
-pub use tag_repository::{TagFilter, TagPaginatedResult, TagPaginationParams, TagRepository};
+pub use tag_repository::{
+    TagRepository,
+    TagPaginationParams,
+    TagPaginatedResult,
+    TagFilter,
+};

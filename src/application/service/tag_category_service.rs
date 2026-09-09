@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateTagCategoryDto, UpdateTagCategoryDto};
 use crate::domain::entity::TagCategory;
 use crate::infrastructure::persistence::TagCategoryRepository;
-use crate::presentation::dto::{CreateTagCategoryDto, UpdateTagCategoryDto};
 
 /// Application service for TagCategory entities.
 ///

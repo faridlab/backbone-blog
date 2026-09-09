@@ -5,11 +5,11 @@
 //! This trait defines the repository contract for the BlogAuditLog aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
-use crate::domain::entity::{BlogAuditEvent, BlogAuditLog};
+use crate::domain::entity::{BlogAuditLog, BlogAuditEvent};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -44,7 +44,6 @@ pub struct BlogAuditLogPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct BlogAuditLogFilter {
-    pub company_id: Option<Uuid>,
     pub event: Option<BlogAuditEvent>,
     pub actor: Option<Uuid>,
     pub subject_type: Option<String>,
@@ -54,11 +53,7 @@ pub struct BlogAuditLogFilter {
 impl BlogAuditLogFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some()
-            || self.event.is_some()
-            || self.actor.is_some()
-            || self.subject_type.is_some()
-            || self.subject_id.is_some()
+        self.event.is_some() || self.actor.is_some() || self.subject_type.is_some() || self.subject_id.is_some()
     }
 }
 
@@ -68,6 +63,7 @@ impl BlogAuditLogFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait BlogAuditLogRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -92,17 +88,10 @@ pub trait BlogAuditLogRepository: Send + Sync {
     // =========================================================================
 
     /// List blog_audit_log with pagination
-    async fn list(
-        &self,
-        params: BlogAuditLogPaginationParams,
-    ) -> Result<BlogAuditLogPaginatedResult>;
+    async fn list(&self, params: BlogAuditLogPaginationParams) -> Result<BlogAuditLogPaginatedResult>;
 
     /// List blog_audit_log with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: BlogAuditLogPaginationParams,
-        filters: BlogAuditLogFilter,
-    ) -> Result<BlogAuditLogPaginatedResult>;
+    async fn list_with_filters(&self, params: BlogAuditLogPaginationParams, filters: BlogAuditLogFilter) -> Result<BlogAuditLogPaginatedResult>;
 
     /// Count all blog_audit_log entities
     async fn count(&self) -> Result<u64>;

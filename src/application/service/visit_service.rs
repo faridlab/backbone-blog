@@ -163,7 +163,6 @@ impl VisitService {
                     // message — no oracle on WHICH arm failed).
                     self.visits
                         .audit_refusal(
-                            website.company_id,
                             "capability_refused",
                             json!({ "post_slug": post_slug }),
                         )
@@ -185,7 +184,6 @@ impl VisitService {
         {
             self.visits
                 .audit_refusal(
-                    website.company_id,
                     "visit_throttled",
                     json!({ "post_slug": post_slug, "client_ip": client_ip }),
                 )
@@ -202,7 +200,7 @@ impl VisitService {
             visits,
         } = self
             .visits
-            .visit(website.company_id, website.id, post_slug, &token)
+            .visit(website.id, post_slug, &token)
             .await?;
         Ok(VisitResponse {
             post_id,

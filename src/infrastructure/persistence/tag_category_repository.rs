@@ -23,9 +23,7 @@ pub struct TagCategoryRepository(
 
 impl std::ops::Deref for TagCategoryRepository {
     type Target = backbone_orm::GenericCrudRepository<TagCategory, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl TagCategoryRepository {

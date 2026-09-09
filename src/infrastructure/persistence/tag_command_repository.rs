@@ -1,36 +1,41 @@
 //! The tag verb repository (hand-written; user-owned; see
 //! `metaphor.codegen.yaml`) + the module's slug normalizer.
 //!
-//! RLS LAW: every transactional method begins with `pool.begin()` +
-//! `company_scope::bind_current_company`; the direct-pool reads go
-//! through the `*_scoped` helpers. Slug resolution is a SCOPED
-//! LOOKUP, never URL-derived trust (D8: `slug -> id` under the bound
-//! company; unknown slug = the uniform miss).
+//! Tenancy (ADR-0029): the module ships no tenant key and installs no
+//! fence — the composing service's tenancy decorator owns `org_unit_id`,
+//! the RLS policy, and the per-unit uniques. Every transactional method
+//! therefore begins with `pool.begin()` + [`bind_ambient_org_scope`]
+//! (the composing service's ambient request scope, when one is
+//! resolved, relayed onto the transaction so the decorator's fence
+//! governs every statement that follows; unfenced deployments run
+//! plainly). Direct-pool reads (the admin list, slug resolution) go
+//! through the `*_scoped` helpers, which ride the request connection
+//! when one is bound. Slug resolution is a SCOPED LOOKUP, never
+//! URL-derived trust (D8: `slug -> id` under the ambient scope;
+//! unknown slug = the uniform miss).
 //!
-//! The uniqueness grain is THE COMPANY (D3 / hardening H3): Odoo's
-//! global `unique(name)` is the addon's only 2 SQL constraints and is
-//! wrong for multi-tenancy — a global wall is a cross-tenant
-//! existence oracle and a collision blocker. Within one company the
-//! vocabulary is shared across that company's blogs and websites.
+//! The uniqueness grain is the composing deployment's tenancy unit
+//! (ADR-0029): the module itself ships no tag name/slug wall — the
+//! decorator-installed per-unit twins carry the uniqueness where a
+//! deployment declares it. Within one unit the vocabulary is shared
+//! across that unit's blogs and websites.
 
 use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
-
-use backbone_orm::company_scope;
+use super::scoped_read;
 
 use crate::application::service::blog_error::{map_unique_violation, BlogError, BlogResult};
 
-use super::blog_command_repository::record_audit;
+use super::blog_command_repository::{bind_ambient_org_scope, record_audit};
 
-const TAG_COLUMNS: &str = "id, company_id, name, slug, category_id";
-const CATEGORY_COLUMNS: &str = "id, company_id, name";
+const TAG_COLUMNS: &str = "id, name, slug, category_id";
+const CATEGORY_COLUMNS: &str = "id, name";
 
 /// A tag row.
 #[derive(Debug, Clone, serde::Serialize, sqlx::FromRow)]
 pub struct TagRow {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
     pub slug: String,
     pub category_id: Option<Uuid>,
@@ -40,7 +45,6 @@ pub struct TagRow {
 #[derive(Debug, Clone, serde::Serialize, sqlx::FromRow)]
 pub struct TagCategoryRow {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
 }
 
@@ -76,25 +80,25 @@ impl TagCommandRepository {
         Self { pool }
     }
 
-    /// Create a tag at the company grain: name trimmed by the
-    /// service, slug derived here. Collisions surface as the typed
-    /// 409s (`uq_tags_company_name` / `uq_tags_company_slug`).
+    /// Create a tag: name trimmed by the service, slug derived here.
+    /// Collisions surface through the decorator-installed per-unit
+    /// uniques of the composing service (mapped by constraint name
+    /// when they reuse the historical wall names) or as the generic
+    /// duplicate refusal.
     pub async fn create(
         &self,
-        company: Uuid,
         name: &str,
         category_id: Option<Uuid>,
         actor: Option<Uuid>,
     ) -> BlogResult<TagRow> {
         let slug = normalize_slug(name);
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let row: TagRow = match sqlx::query_as::<_, TagRow>(&format!(
-            "INSERT INTO blog.tags (id, company_id, name, slug, category_id)
-             VALUES (gen_random_uuid(), $1, $2, $3, $4)
+            "INSERT INTO blog.tags (id, name, slug, category_id)
+             VALUES (gen_random_uuid(), $1, $2, $3)
              RETURNING {TAG_COLUMNS}"
         ))
-        .bind(company)
         .bind(name)
         .bind(&slug)
         .bind(category_id)
@@ -105,8 +109,7 @@ impl TagCommandRepository {
             Err(e) => return Err(map_unique_violation(e)),
         };
         record_audit(
-            &mut tx,
-            company,
+            &mut *tx,
             "tag_created",
             actor,
             "tag",
@@ -129,7 +132,7 @@ impl TagCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<(TagRow, Option<String>)> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let before: Option<(String, String)> = sqlx::query_as(
             "SELECT name, slug FROM blog.tags
               WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
@@ -169,8 +172,7 @@ impl TagCommandRepository {
             None
         };
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "tag_updated",
             actor,
             "tag",
@@ -187,15 +189,17 @@ impl TagCommandRepository {
     /// untag-first order makes the verb total).
     pub async fn delete(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<i64> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let company: Uuid = sqlx::query_scalar(
-            "SELECT company_id FROM blog.tags
-              WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
+        bind_ambient_org_scope(&mut *tx).await?;
+        let exists: Option<i32> = sqlx::query_scalar(
+            "SELECT 1 FROM blog.tags WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
         )
         .bind(id)
         .fetch_optional(&mut *tx)
         .await?
-        .ok_or(BlogError::NotFound)?;
+        ;
+        if exists.is_none() {
+            return Err(BlogError::NotFound);
+        }
         let untagged = sqlx::query("DELETE FROM blog.post_tags WHERE tag_id = $1")
             .bind(id)
             .execute(&mut *tx)
@@ -206,8 +210,7 @@ impl TagCommandRepository {
             .execute(&mut *tx)
             .await?;
         record_audit(
-            &mut tx,
-            company,
+            &mut *tx,
             "tag_deleted",
             actor,
             "tag",
@@ -219,9 +222,9 @@ impl TagCommandRepository {
         Ok(untagged)
     }
 
-    /// The admin list (the full company vocabulary, all states).
+    /// The admin list (the full vocabulary, all states).
     pub async fn list(&self, limit: i64) -> BlogResult<Vec<TagRow>> {
-        let rows = backbone_orm::company_scope::fetch_all_scoped(
+        let rows = scoped_read::fetch_all(
             &self.pool,
             sqlx::query_as::<_, TagRow>(&format!(
                 "SELECT {TAG_COLUMNS} FROM blog.tags
@@ -234,10 +237,10 @@ impl TagCommandRepository {
         Ok(rows)
     }
 
-    /// Resolve a slug to the tag row under the bound company (D8:
+    /// Resolve a slug to the tag row under the ambient scope (D8:
     /// scoped lookup; a miss is the uniform 404).
     pub async fn resolve_by_slug(&self, slug: &str) -> BlogResult<TagRow> {
-        let row = backbone_orm::company_scope::fetch_optional_scoped(
+        let row = scoped_read::fetch_optional(
             &self.pool,
             sqlx::query_as::<_, TagRow>(&format!(
                 "SELECT {TAG_COLUMNS} FROM blog.tags
@@ -254,7 +257,7 @@ impl TagCommandRepository {
     /// returns the misses so the caller can try the redirect seam
     /// before refusing.
     pub async fn resolve_many(&self, slugs: &[String]) -> BlogResult<(Vec<TagRow>, Vec<String>)> {
-        let rows = backbone_orm::company_scope::fetch_all_scoped(
+        let rows = scoped_read::fetch_all(
             &self.pool,
             sqlx::query_as::<_, TagRow>(&format!(
                 "SELECT {TAG_COLUMNS} FROM blog.tags
@@ -275,7 +278,7 @@ impl TagCommandRepository {
     // ── tag categories (master data) ─────────────────────────────────
 
     pub async fn list_categories(&self, limit: i64) -> BlogResult<Vec<TagCategoryRow>> {
-        let rows = backbone_orm::company_scope::fetch_all_scoped(
+        let rows = scoped_read::fetch_all(
             &self.pool,
             sqlx::query_as::<_, TagCategoryRow>(&format!(
                 "SELECT {CATEGORY_COLUMNS} FROM blog.tag_categories
@@ -290,24 +293,21 @@ impl TagCommandRepository {
 
     pub async fn create_category(
         &self,
-        company: Uuid,
         name: &str,
         actor: Option<Uuid>,
     ) -> BlogResult<TagCategoryRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let row: TagCategoryRow = sqlx::query_as::<_, TagCategoryRow>(&format!(
-            "INSERT INTO blog.tag_categories (id, company_id, name)
-             VALUES (gen_random_uuid(), $1, $2)
+            "INSERT INTO blog.tag_categories (id, name)
+             VALUES (gen_random_uuid(), $1)
              RETURNING {CATEGORY_COLUMNS}"
         ))
-        .bind(company)
         .bind(name)
         .fetch_one(&mut *tx)
         .await?;
         record_audit(
-            &mut tx,
-            company,
+            &mut *tx,
             "tag_created",
             actor,
             "tag_category",
@@ -326,7 +326,7 @@ impl TagCommandRepository {
         actor: Option<Uuid>,
     ) -> BlogResult<TagCategoryRow> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        bind_ambient_org_scope(&mut *tx).await?;
         let row: TagCategoryRow = sqlx::query_as::<_, TagCategoryRow>(&format!(
             "UPDATE blog.tag_categories SET name = $2
                WHERE id = $1 AND metadata->>'deleted_at' IS NULL
@@ -338,8 +338,7 @@ impl TagCommandRepository {
         .await?
         .ok_or(BlogError::NotFound)?;
         record_audit(
-            &mut tx,
-            row.company_id,
+            &mut *tx,
             "tag_updated",
             actor,
             "tag_category",
@@ -355,15 +354,17 @@ impl TagCommandRepository {
     /// refusal (the RESTRICT FK surfaced as a 422 with a reason).
     pub async fn delete_category(&self, id: Uuid, actor: Option<Uuid>) -> BlogResult<()> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let company: Uuid = sqlx::query_scalar(
-            "SELECT company_id FROM blog.tag_categories
+        bind_ambient_org_scope(&mut *tx).await?;
+        let exists: Option<i32> = sqlx::query_scalar(
+            "SELECT 1 FROM blog.tag_categories
               WHERE id = $1 AND metadata->>'deleted_at' IS NULL",
         )
         .bind(id)
         .fetch_optional(&mut *tx)
-        .await?
-        .ok_or(BlogError::NotFound)?;
+        .await?;
+        if exists.is_none() {
+            return Err(BlogError::NotFound);
+        }
         let linked: i64 =
             sqlx::query_scalar("SELECT count(*) FROM blog.tags WHERE category_id = $1")
                 .bind(id)
@@ -379,8 +380,7 @@ impl TagCommandRepository {
             .execute(&mut *tx)
             .await?;
         record_audit(
-            &mut tx,
-            company,
+            &mut *tx,
             "tag_deleted",
             actor,
             "tag_category",

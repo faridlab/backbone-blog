@@ -1,21 +1,22 @@
-//! TAG GRAMMAR (the BLOG-TAGS register row): the company-grain unique
-//! walls, the rename-redirect flow over the website seam, the tag
-//! filter's comma grammar, and the cloud's visibility fence — SPEC
-//! sections 4.4 and 13.3.
+//! TAG GRAMMAR (the BLOG-TAGS register row): the rename-redirect flow
+//! over the website seam, the tag filter's comma grammar, and the
+//! cloud's visibility fence — SPEC sections 4.4 and 13.3.
+//!
+//! Tenancy (ADR-0029): the module ships NO name/slug wall of its own —
+//! a composing deployment's tenancy decorator owns the per-unit
+//! uniqueness walls and their fence probes. What remains module-local
+//! is the slug grammar and the redirect flow, claimed here.
 //!
 //! Claims:
-//! 1. duplicate name (CASE-FOLDED) in one company → 409
-//!    `blog_tag_name_taken` (D3: the wall is `lower(name)`).
-//! 2. the SAME name in ANOTHER company → OK (company grain, D3).
-//! 3. rename → the slug recomputes and the stale slug is recorded
+//! 1. rename → the slug recomputes and the stale slug is recorded
 //!    through the seam exactly ONCE (`/tags/{old}` → `/tags/{new}`,
 //!    moved_301).
-//! 4. a stale tag slug in the listing filter resolves through the
+//! 2. a stale tag slug in the listing filter resolves through the
 //!    seam's canned 301 to the canonical tag.
-//! 5. an unknown tag slug (no seam answer) → the uniform 404.
-//! 6. more than one tag on a GET → 302 to the first tag's canonical
+//! 3. an unknown tag slug (no seam answer) → the uniform 404.
+//! 4. more than one tag on a GET → 302 to the first tag's canonical
 //!    listing URL.
-//! 7. the cloud counts only VISIBLE posts (an archived post's tag
+//! 5. the cloud counts only VISIBLE posts (an archived post's tag
 //!    disappears from the count).
 
 use std::sync::Arc;
@@ -26,62 +27,27 @@ use backbone_blog::application::service::public_query_service::{
 use backbone_blog::application::service::tag_service::TagCommandService;
 use backbone_blog::infrastructure::persistence::tag_command_repository::normalize_slug;
 use backbone_blog::infrastructure::persistence::tag_command_repository::TagCommandRepository;
-use backbone_orm::company_scope::with_company_scope;
 
 use super::common::{
-    make_blog, make_post_archived, make_post_visible, make_tag, probe_tenancy, tag_post,
+    make_blog, make_post_archived, make_post_visible, make_tag, probe_website, tag_post,
     StubSurface, TestDb, PROBE_HOST,
 };
 
 #[tokio::test]
-async fn tag_name_walls_are_company_grain_and_case_folded() {
-    let db = TestDb::new("taggrain").await;
-    let (company, _view) = probe_tenancy();
-
-    let service = TagCommandService::new(TagCommandRepository::new(db.pool.clone()));
-
-    // The name exists once per company, case-folded.
-    let first = with_company_scope(Some(company), service.create(company, "News", None, None))
-        .await
-        .unwrap();
-    let dup = with_company_scope(Some(company), service.create(company, "NEWS", None, None)).await;
-    assert_eq!(dup.unwrap_err().code(), "blog_tag_name_taken");
-
-    // The SAME name in ANOTHER company is fine (D3).
-    let other_company = uuid::Uuid::new_v4();
-    let theirs = with_company_scope(
-        Some(other_company),
-        service.create(other_company, "News", None, None),
-    )
-    .await
-    .unwrap();
-    assert_ne!(theirs.id, first.id);
-
-    db.dispose().await;
-}
-
-#[tokio::test]
 async fn rename_recomputes_the_slug_and_records_one_redirect() {
     let db = TestDb::new("tagren").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    make_blog(&db, company, view.id, "Probe Journal").await;
+    make_blog(&db, view.id, "Probe Journal").await;
 
     let service = TagCommandService::new(TagCommandRepository::new(db.pool.clone()));
-    let tag = with_company_scope(
-        Some(company),
-        service.create(company, "Old Label", None, None),
-    )
-    .await
-    .unwrap();
+    let tag = service.create("Old Label", None, None).await.unwrap();
     assert_eq!(tag.slug, normalize_slug("Old Label"));
 
-    let (row, prior) = with_company_scope(
-        Some(company),
-        service.rename(tag.id, Some("New Label"), None, None),
-    )
-    .await
-    .unwrap();
+    let (row, prior) = service
+        .rename(tag.id, Some("New Label"), None, None)
+        .await
+        .unwrap();
     let prior = prior.unwrap();
     assert_eq!(prior, "old-label");
     assert_eq!(row.slug, "new-label");
@@ -112,15 +78,15 @@ async fn rename_recomputes_the_slug_and_records_one_redirect() {
 #[tokio::test]
 async fn the_listing_tag_filter_grammar_resolves_stale_unknown_and_multi() {
     let db = TestDb::new("tagfilt").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
     let blog_slug = normalize_slug(&blog.name);
 
-    let post_id = make_post_visible(&db, company, blog.id, "tagged-post").await;
-    let canonical = make_tag(&db, company, "Canonical Tag").await;
-    let second = make_tag(&db, company, "Second Tag").await;
-    tag_post(&db, company, post_id, &[canonical.id]).await;
+    let post_id = make_post_visible(&db, blog.id, "tagged-post").await;
+    let canonical = make_tag(&db, "Canonical Tag").await;
+    let second = make_tag(&db, "Second Tag").await;
+    tag_post(&db, post_id, &[canonical.id]).await;
 
     let public_queries = PublicQueryService::new(db.pool.clone(), surface.clone());
 
@@ -201,17 +167,17 @@ async fn the_listing_tag_filter_grammar_resolves_stale_unknown_and_multi() {
 #[tokio::test]
 async fn the_cloud_counts_only_visible_posts() {
     let db = TestDb::new("tagcloud").await;
-    let (company, view) = probe_tenancy();
+    let view = probe_website();
     let surface = Arc::new(StubSurface::binding(view.clone()));
-    let blog = make_blog(&db, company, view.id, "Probe Journal").await;
+    let blog = make_blog(&db, view.id, "Probe Journal").await;
     let blog_slug = normalize_slug(&blog.name);
 
-    let visible_id = make_post_visible(&db, company, blog.id, "cloud-visible").await;
-    let archived_id = make_post_archived(&db, company, blog.id, "cloud-archived").await;
-    let visible_tag = make_tag(&db, company, "Live Topic").await;
-    let archived_tag = make_tag(&db, company, "Dead Topic").await;
-    tag_post(&db, company, visible_id, &[visible_tag.id]).await;
-    tag_post(&db, company, archived_id, &[archived_tag.id]).await;
+    let visible_id = make_post_visible(&db, blog.id, "cloud-visible").await;
+    let archived_id = make_post_archived(&db, blog.id, "cloud-archived").await;
+    let visible_tag = make_tag(&db, "Live Topic").await;
+    let archived_tag = make_tag(&db, "Dead Topic").await;
+    tag_post(&db, visible_id, &[visible_tag.id]).await;
+    tag_post(&db, archived_id, &[archived_tag.id]).await;
 
     let public_queries = PublicQueryService::new(db.pool.clone(), surface);
     let cloud = public_queries

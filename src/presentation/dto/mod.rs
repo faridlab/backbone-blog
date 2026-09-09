@@ -5,8 +5,8 @@
 //! This module provides DTOs for the presentation layer,
 //! with validation and OpenAPI schema support.
 
-pub mod blog_audit_log_dto;
 pub mod blog_dto;
+pub mod blog_audit_log_dto;
 pub mod post_dto;
 pub mod post_tag_dto;
 pub mod post_view_receipt_dto;
@@ -14,32 +14,61 @@ pub mod tag_category_dto;
 pub mod tag_dto;
 
 // Re-exports
-pub use blog_audit_log_dto::{
-    BlogAuditLogListResponseDto, BlogAuditLogResponseDto, BlogAuditLogSummaryDto,
-    CreateBlogAuditLogDto, PatchBlogAuditLogDto, UpdateBlogAuditLogDto,
-};
 pub use blog_dto::{
-    BlogListResponseDto, BlogResponseDto, BlogSummaryDto, CreateBlogDto, PatchBlogDto,
+    CreateBlogDto,
     UpdateBlogDto,
+    PatchBlogDto,
+    BlogResponseDto,
+    BlogListResponseDto,
+    BlogSummaryDto,
+};
+pub use blog_audit_log_dto::{
+    CreateBlogAuditLogDto,
+    UpdateBlogAuditLogDto,
+    PatchBlogAuditLogDto,
+    BlogAuditLogResponseDto,
+    BlogAuditLogListResponseDto,
+    BlogAuditLogSummaryDto,
 };
 pub use post_dto::{
-    CreatePostDto, PatchPostDto, PostListResponseDto, PostResponseDto, PostSummaryDto,
+    CreatePostDto,
     UpdatePostDto,
+    PatchPostDto,
+    PostResponseDto,
+    PostListResponseDto,
+    PostSummaryDto,
 };
 pub use post_tag_dto::{
-    CreatePostTagDto, PatchPostTagDto, PostTagListResponseDto, PostTagResponseDto,
-    PostTagSummaryDto, UpdatePostTagDto,
+    CreatePostTagDto,
+    UpdatePostTagDto,
+    PatchPostTagDto,
+    PostTagResponseDto,
+    PostTagListResponseDto,
+    PostTagSummaryDto,
 };
 pub use post_view_receipt_dto::{
-    CreatePostViewReceiptDto, PatchPostViewReceiptDto, PostViewReceiptListResponseDto,
-    PostViewReceiptResponseDto, PostViewReceiptSummaryDto, UpdatePostViewReceiptDto,
+    CreatePostViewReceiptDto,
+    UpdatePostViewReceiptDto,
+    PatchPostViewReceiptDto,
+    PostViewReceiptResponseDto,
+    PostViewReceiptListResponseDto,
+    PostViewReceiptSummaryDto,
 };
 pub use tag_category_dto::{
-    CreateTagCategoryDto, PatchTagCategoryDto, TagCategoryListResponseDto, TagCategoryResponseDto,
-    TagCategorySummaryDto, UpdateTagCategoryDto,
+    CreateTagCategoryDto,
+    UpdateTagCategoryDto,
+    PatchTagCategoryDto,
+    TagCategoryResponseDto,
+    TagCategoryListResponseDto,
+    TagCategorySummaryDto,
 };
 pub use tag_dto::{
-    CreateTagDto, PatchTagDto, TagListResponseDto, TagResponseDto, TagSummaryDto, UpdateTagDto,
+    CreateTagDto,
+    UpdateTagDto,
+    PatchTagDto,
+    TagResponseDto,
+    TagListResponseDto,
+    TagSummaryDto,
 };
 
 // Common pagination types
@@ -65,12 +94,8 @@ pub struct PaginationParams {
     pub sort_order: Option<String>,
 }
 
-fn default_page() -> u32 {
-    1
-}
-fn default_per_page() -> u32 {
-    20
-}
+fn default_page() -> u32 { 1 }
+fn default_per_page() -> u32 { 20 }
 
 /// API response wrapper
 #[derive(Debug, Clone, Serialize)]
@@ -95,11 +120,7 @@ pub struct ApiError {
 
 impl<T> ApiResponse<T> {
     pub fn ok(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            error: None,
-        }
+        Self { success: true, data: Some(data), error: None }
     }
 
     pub fn err(code: impl Into<String>, message: impl Into<String>) -> Self {

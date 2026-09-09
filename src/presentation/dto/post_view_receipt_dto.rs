@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -31,16 +31,7 @@ use crate::domain::entity::PostViewReceipt;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreatePostViewReceiptDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "post_id")]
     pub post_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 64)))]
@@ -68,16 +59,7 @@ pub struct CreatePostViewReceiptDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatePostViewReceiptDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "post_id")]
     pub post_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 64)))]
@@ -105,16 +87,7 @@ pub struct UpdatePostViewReceiptDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchPostViewReceiptDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "post_id")]
     pub post_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 64)))]
@@ -132,11 +105,7 @@ pub struct PatchPostViewReceiptDto {
 impl PatchPostViewReceiptDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some()
-            || self.post_id.is_some()
-            || self.view_token.is_some()
-            || self.window_start.is_some()
-            || self.occurred_at.is_some()
+        self.post_id.is_some() || self.view_token.is_some() || self.window_start.is_some() || self.occurred_at.is_some()
     }
 }
 
@@ -152,20 +121,9 @@ impl PatchPostViewReceiptDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PostViewReceiptResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub post_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub view_token: String,
@@ -205,12 +163,7 @@ pub struct PostViewReceiptListResponseDto {
 
 impl PostViewReceiptListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<PostViewReceiptResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<PostViewReceiptResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -234,9 +187,9 @@ impl PostViewReceiptListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct PostViewReceiptSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub post_id: Uuid,
     pub view_token: String,
+    pub window_start: DateTime<Utc>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -248,7 +201,6 @@ impl From<PostViewReceipt> for PostViewReceiptResponseDto {
     fn from(entity: PostViewReceipt) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             post_id: entity.post_id,
             view_token: entity.view_token,
             window_start: entity.window_start,
@@ -262,9 +214,9 @@ impl From<PostViewReceipt> for PostViewReceiptSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             post_id: entity.post_id,
             view_token: entity.view_token,
+            window_start: entity.window_start,
             created_at,
         }
     }
@@ -274,7 +226,6 @@ impl From<CreatePostViewReceiptDto> for PostViewReceipt {
     fn from(dto: CreatePostViewReceiptDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             post_id: dto.post_id,
             view_token: dto.view_token,
             window_start: dto.window_start,
@@ -287,7 +238,6 @@ impl From<&PostViewReceipt> for PostViewReceiptResponseDto {
     fn from(entity: &PostViewReceipt) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             post_id: entity.post_id.clone(),
             view_token: entity.view_token.clone(),
             window_start: entity.window_start.clone(),
@@ -304,7 +254,6 @@ impl backbone_core::FromCreateDto<CreatePostViewReceiptDto> for PostViewReceipt 
 
 impl backbone_core::ApplyUpdateDto<UpdatePostViewReceiptDto> for PostViewReceipt {
     fn apply_update(mut self, dto: UpdatePostViewReceiptDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.post_id = dto.post_id;
         self.view_token = dto.view_token;
         self.window_start = dto.window_start;
