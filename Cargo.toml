@@ -1,6 +1,6 @@
 [package]
 name = "backbone-blog"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 description = "The blog module (Odoo website blog port) — blogs/posts/tags as a tenant-agnostic content domain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
 
