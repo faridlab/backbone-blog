@@ -84,17 +84,27 @@ pub async fn record_audit(
     subject_id: Option<Uuid>,
     detail: serde_json::Value,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "INSERT INTO blog.blog_audit_log
-             (id, event, actor, subject_type, subject_id, detail, occurred_at)
-         VALUES (gen_random_uuid(), $1::blog_audit_event, $2, $3, $4, $5, now())",
+    backbone_auditlog::application::service::append(
+        tx,
+        backbone_auditlog::application::service::AuditEvent {
+            event_type: backbone_auditlog::domain::entity::AuditEventType::DataChange,
+            action: event.to_string(),
+            // Normalised to the schema-qualified table the capture trigger
+            // writes, so verb rows and trigger rows key identically.
+            subject_type: Some(if subject_type.contains('.') {
+                subject_type.to_string()
+            } else {
+                format!("blog.{subject_type}")
+            }),
+            subject_id: subject_id.map(|id| id.to_string()),
+            changed: Some(detail),
+            reason: None,
+            status: backbone_auditlog::domain::entity::AuditStatus::Success,
+            // The verb was handed an actor; the session GUC would attribute
+            // this to the request owner or to `system`, and both can be wrong.
+            actor: actor.map(|id| id.to_string()),
+        },
     )
-    .bind(event)
-    .bind(actor)
-    .bind(subject_type)
-    .bind(subject_id)
-    .bind(detail)
-    .execute(tx)
     .await?;
     Ok(())
 }
