@@ -7,7 +7,6 @@
 
 
 pub mod blog_repository;
-pub mod blog_audit_log_repository;
 pub mod post_repository;
 pub mod post_tag_repository;
 pub mod post_view_receipt_repository;
@@ -20,12 +19,6 @@ pub use blog_repository::{
     BlogPaginationParams,
     BlogPaginatedResult,
     BlogFilter,
-};
-pub use blog_audit_log_repository::{
-    BlogAuditLogRepository,
-    BlogAuditLogPaginationParams,
-    BlogAuditLogPaginatedResult,
-    BlogAuditLogFilter,
 };
 pub use post_repository::{
     PostRepository,

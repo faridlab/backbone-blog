@@ -6,7 +6,6 @@ pub mod shared_types;
 pub use shared_types::{ValidationError, ValidationErrors, ValidationResult, EntityValidator};
 
 pub mod blog_validator;
-pub mod blog_audit_log_validator;
 pub mod post_validator;
 pub mod post_tag_validator;
 pub mod post_view_receipt_validator;
@@ -14,7 +13,6 @@ pub mod tag_category_validator;
 pub mod tag_validator;
 
 pub use blog_validator::{BlogValidator, blog_validator};
-pub use blog_audit_log_validator::{BlogAuditLogValidator, blog_audit_log_validator};
 pub use post_validator::{PostValidator, post_validator};
 pub use post_tag_validator::{PostTagValidator, post_tag_validator};
 pub use post_view_receipt_validator::{PostViewReceiptValidator, post_view_receipt_validator};

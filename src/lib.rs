@@ -32,7 +32,6 @@ pub use domain::entity::*;
 pub use infrastructure::persistence::*;
 
 // Re-exports - Application services
-pub use application::service::BlogAuditLogService;
 pub use application::service::BlogService;
 pub use application::service::PostService;
 pub use application::service::PostTagService;
@@ -58,7 +57,6 @@ use std::sync::Arc;
 /// ```
 pub struct BlogModule {
     pub(crate) blog_service: Arc<BlogService>,
-    pub(crate) blog_audit_log_service: Arc<BlogAuditLogService>,
     pub(crate) post_service: Arc<PostService>,
     pub(crate) post_tag_service: Arc<PostTagService>,
     pub(crate) post_view_receipt_service: Arc<PostViewReceiptService>,
@@ -92,17 +90,13 @@ impl BlogModule {
     /// dependents. Prefer a guarded composition (read + validated writes) for any
     /// real deployment; use this only in trusted/admin/seeding contexts.
     pub fn all_crud_routes(&self) -> Router {
-        use presentation::http::{
-            create_blog_audit_log_read_routes, create_blog_read_routes, create_post_read_routes,
+        use presentation::http::{ create_blog_read_routes, create_post_read_routes,
             create_post_tag_routes, create_post_view_receipt_read_routes,
             create_tag_category_routes, create_tag_routes,
         };
 
         Router::new()
             .merge(create_blog_read_routes(self.blog_service.clone()))
-            .merge(create_blog_audit_log_read_routes(
-                self.blog_audit_log_service.clone(),
-            ))
             .merge(create_post_read_routes(self.post_service.clone()))
             .merge(create_post_tag_routes(self.post_tag_service.clone()))
             .merge(create_post_view_receipt_read_routes(
@@ -132,17 +126,13 @@ impl BlogModule {
     /// validated write service's invariants. Use this as the production base and
     /// merge validated write routes (or a write service's HTTP layer) onto it.
     pub fn readonly_routes(&self) -> Router {
-        use presentation::http::{
-            create_blog_audit_log_read_routes, create_blog_read_routes, create_post_read_routes,
+        use presentation::http::{ create_blog_read_routes, create_post_read_routes,
             create_post_tag_read_routes, create_post_view_receipt_read_routes,
             create_tag_category_read_routes, create_tag_read_routes,
         };
 
         Router::new()
             .merge(create_blog_read_routes(self.blog_service.clone()))
-            .merge(create_blog_audit_log_read_routes(
-                self.blog_audit_log_service.clone(),
-            ))
             .merge(create_post_read_routes(self.post_service.clone()))
             .merge(create_post_tag_read_routes(self.post_tag_service.clone()))
             .merge(create_post_view_receipt_read_routes(
@@ -237,12 +227,6 @@ impl BlogModuleBuilder {
         let blog_repository = Arc::new(BlogRepository::new(db_pool.clone()));
         let blog_service = Arc::new(BlogService::with_repository(blog_repository.clone()));
 
-        // BlogAuditLog service
-        let blog_audit_log_repository = Arc::new(BlogAuditLogRepository::new(db_pool.clone()));
-        let blog_audit_log_service = Arc::new(BlogAuditLogService::with_repository(
-            blog_audit_log_repository.clone(),
-        ));
-
         // Post service
         let post_repository = Arc::new(PostRepository::new(db_pool.clone()));
         let post_service = Arc::new(PostService::with_repository(post_repository.clone()));
@@ -303,7 +287,6 @@ impl BlogModuleBuilder {
 
         Ok(BlogModule {
             blog_service,
-            blog_audit_log_service,
             post_service,
             post_tag_service,
             post_view_receipt_service,

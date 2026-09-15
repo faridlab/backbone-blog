@@ -6,7 +6,6 @@
 //! with validation and OpenAPI schema support.
 
 pub mod blog_dto;
-pub mod blog_audit_log_dto;
 pub mod post_dto;
 pub mod post_tag_dto;
 pub mod post_view_receipt_dto;
@@ -21,14 +20,6 @@ pub use blog_dto::{
     BlogResponseDto,
     BlogListResponseDto,
     BlogSummaryDto,
-};
-pub use blog_audit_log_dto::{
-    CreateBlogAuditLogDto,
-    UpdateBlogAuditLogDto,
-    PatchBlogAuditLogDto,
-    BlogAuditLogResponseDto,
-    BlogAuditLogListResponseDto,
-    BlogAuditLogSummaryDto,
 };
 pub use post_dto::{
     CreatePostDto,

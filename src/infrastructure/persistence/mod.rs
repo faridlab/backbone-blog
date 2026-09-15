@@ -5,7 +5,6 @@
 //! Uses backbone-orm's `DatabaseOperations<T>` trait.
 
 mod blog_repository;
-mod blog_audit_log_repository;
 mod post_repository;
 mod post_tag_repository;
 mod post_view_receipt_repository;
@@ -31,7 +30,6 @@ pub mod visit_command_repository;
 
 // Re-exports
 pub use blog_repository::BlogRepository;
-pub use blog_audit_log_repository::BlogAuditLogRepository;
 pub use post_repository::PostRepository;
 pub use post_tag_repository::PostTagRepository;
 pub use post_view_receipt_repository::PostViewReceiptRepository;

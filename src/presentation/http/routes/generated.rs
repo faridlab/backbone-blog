@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use super::{
     blog_handler::create_blog_read_routes,
-    blog_audit_log_handler::create_blog_audit_log_read_routes,
     post_handler::create_post_read_routes,
     post_tag_handler::create_post_tag_routes,
     post_view_receipt_handler::create_post_view_receipt_read_routes,
@@ -20,7 +19,6 @@ use super::{
 
 use crate::application::service::{
     BlogService,
-    BlogAuditLogService,
     PostService,
     PostTagService,
     PostViewReceiptService,
@@ -31,7 +29,6 @@ use crate::application::service::{
 /// Services collection for all CRUD endpoints
 pub struct HttpServices {
     pub blog: Arc<BlogService>,
-    pub blog_audit_log: Arc<BlogAuditLogService>,
     pub post: Arc<PostService>,
     pub post_tag: Arc<PostTagService>,
     pub post_view_receipt: Arc<PostViewReceiptService>,
@@ -58,8 +55,6 @@ pub fn configure_routes(services: HttpServices) -> Router {
     Router::new()
         // Blog routes (READ-ONLY — append-only/event-sourced entity; writes arrive via the event handlers)
         .merge(create_blog_read_routes(services.blog))
-        // BlogAuditLog routes (READ-ONLY — append-only/event-sourced entity; writes arrive via the event handlers)
-        .merge(create_blog_audit_log_read_routes(services.blog_audit_log))
         // Post routes (READ-ONLY — append-only/event-sourced entity; writes arrive via the event handlers)
         .merge(create_post_read_routes(services.post))
         // PostTag routes (12 Backbone endpoints)
@@ -78,10 +73,6 @@ pub mod individual {
 
     pub fn blog_routes(service: Arc<BlogService>) -> Router {
         create_blog_routes(service)
-    }
-
-    pub fn blog_audit_log_routes(service: Arc<BlogAuditLogService>) -> Router {
-        create_blog_audit_log_routes(service)
     }
 
     pub fn post_routes(service: Arc<PostService>) -> Router {

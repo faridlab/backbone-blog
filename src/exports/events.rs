@@ -38,33 +38,6 @@ pub struct BlogDeletedEvent {
 }
 
 // ============================================================================
-// BLOGAUDITLOG EVENTS
-// ============================================================================
-
-/// Event published when a BlogAuditLog is created
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogCreatedEvent {
-    pub id: BlogAuditLogId,
-    pub data: BlogAuditLogDto,
-    pub occurred_at: DateTime<Utc>,
-}
-
-/// Event published when a BlogAuditLog is updated
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogUpdatedEvent {
-    pub id: BlogAuditLogId,
-    pub data: BlogAuditLogDto,
-    pub occurred_at: DateTime<Utc>,
-}
-
-/// Event published when a BlogAuditLog is deleted
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogDeletedEvent {
-    pub id: BlogAuditLogId,
-    pub occurred_at: DateTime<Utc>,
-}
-
-// ============================================================================
 // POST EVENTS
 // ============================================================================
 
@@ -210,9 +183,6 @@ pub enum BlogEvent {
     BlogCreated(BlogCreatedEvent),
     BlogUpdated(BlogUpdatedEvent),
     BlogDeleted(BlogDeletedEvent),
-    BlogAuditLogCreated(BlogAuditLogCreatedEvent),
-    BlogAuditLogUpdated(BlogAuditLogUpdatedEvent),
-    BlogAuditLogDeleted(BlogAuditLogDeletedEvent),
     PostCreated(PostCreatedEvent),
     PostUpdated(PostUpdatedEvent),
     PostDeleted(PostDeletedEvent),

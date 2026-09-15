@@ -226,8 +226,8 @@ dependencies = [
 
 [[package]]
 name = "backbone-auditlog"
-version = "0.1.10"
-source = "git+https://github.com/faridlab/backbone-auditlog?tag=v0.1.10#3cbe758ece75f401c94dfba7c6ae8846495435bd"
+version = "0.1.11"
+source = "git+https://github.com/faridlab/backbone-auditlog?tag=v0.1.11#496a451c18a3e2872af1921948b150aabeb3b6e4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -286,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-blog"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -417,12 +417,13 @@ dependencies = [
 
 [[package]]
 name = "backbone-portal"
-version = "0.2.11"
-source = "git+https://github.com/faridlab/backbone-portal?tag=v0.2.11#30f0448a0d35c0e03df6465f183f07b831e8f3b5"
+version = "0.2.12"
+source = "git+https://github.com/faridlab/backbone-portal?tag=v0.2.12#0e66bb4e7f186f5e449a127610a683c800b220e5"
 dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "backbone-auditlog",
  "backbone-auth",
  "backbone-core",
  "backbone-messaging",
@@ -516,12 +517,13 @@ dependencies = [
 
 [[package]]
 name = "backbone-website"
-version = "0.3.12"
-source = "git+https://github.com/faridlab/backbone-website?tag=v0.3.12#bf6a81b560385f34cdf85f349f1d6e5bb3c3e629"
+version = "0.3.13"
+source = "git+https://github.com/faridlab/backbone-website?tag=v0.3.13#9d61e21c3fc4abafb47fdcc763d33486fe6ca79f"
 dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "backbone-auditlog",
  "backbone-auth",
  "backbone-core",
  "backbone-messaging",

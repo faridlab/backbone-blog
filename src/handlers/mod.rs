@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 // Import all services
 use crate::application::service::BlogService;
-use crate::application::service::BlogAuditLogService;
 use crate::application::service::PostService;
 use crate::application::service::PostTagService;
 use crate::application::service::PostViewReceiptService;
@@ -37,8 +36,6 @@ use crate::application::service::TagService;
 pub struct AppState {
     /// Blog service
     pub blog_service: Arc<BlogService>,
-    /// BlogAuditLog service
-    pub blog_audit_log_service: Arc<BlogAuditLogService>,
     /// Post service
     pub post_service: Arc<PostService>,
     /// PostTag service
@@ -55,7 +52,6 @@ impl AppState {
     /// Create a new AppState with all services.
     pub fn new(
         blog_service: Arc<BlogService>,
-        blog_audit_log_service: Arc<BlogAuditLogService>,
         post_service: Arc<PostService>,
         post_tag_service: Arc<PostTagService>,
         post_view_receipt_service: Arc<PostViewReceiptService>,
@@ -64,7 +60,6 @@ impl AppState {
     ) -> Self {
         Self {
             blog_service,
-            blog_audit_log_service,
             post_service,
             post_tag_service,
             post_view_receipt_service,
@@ -77,7 +72,6 @@ impl AppState {
     pub fn from_module(module: &crate::BlogModule) -> Self {
         Self {
             blog_service: module.blog_service.clone(),
-            blog_audit_log_service: module.blog_audit_log_service.clone(),
             post_service: module.post_service.clone(),
             post_tag_service: module.post_tag_service.clone(),
             post_view_receipt_service: module.post_view_receipt_service.clone(),
@@ -93,7 +87,6 @@ impl AppState {
 #[derive(Default)]
 pub struct AppStateBuilder {
     blog_service: Option<Arc<BlogService>>,
-    blog_audit_log_service: Option<Arc<BlogAuditLogService>>,
     post_service: Option<Arc<PostService>>,
     post_tag_service: Option<Arc<PostTagService>>,
     post_view_receipt_service: Option<Arc<PostViewReceiptService>>,
@@ -110,12 +103,6 @@ impl AppStateBuilder {
     /// Set the Blog service.
     pub fn with_blog_service(mut self, service: Arc<BlogService>) -> Self {
         self.blog_service = Some(service);
-        self
-    }
-
-    /// Set the BlogAuditLog service.
-    pub fn with_blog_audit_log_service(mut self, service: Arc<BlogAuditLogService>) -> Self {
-        self.blog_audit_log_service = Some(service);
         self
     }
 
@@ -157,7 +144,6 @@ impl AppStateBuilder {
     pub fn build(self) -> AppState {
         AppState {
             blog_service: self.blog_service.expect("blog_service is required"),
-            blog_audit_log_service: self.blog_audit_log_service.expect("blog_audit_log_service is required"),
             post_service: self.post_service.expect("post_service is required"),
             post_tag_service: self.post_tag_service.expect("post_tag_service is required"),
             post_view_receipt_service: self.post_view_receipt_service.expect("post_view_receipt_service is required"),

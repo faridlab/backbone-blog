@@ -6,7 +6,6 @@
 //! to provide all 12 standard Backbone CRUD endpoints.
 
 pub mod blog_handler;
-pub mod blog_audit_log_handler;
 pub mod post_handler;
 pub mod post_tag_handler;
 pub mod post_view_receipt_handler;
@@ -24,7 +23,6 @@ pub mod public_routes;
 
 // Re-exports
 pub use blog_handler::{create_blog_routes, create_blog_read_routes, create_blog_write_routes};
-pub use blog_audit_log_handler::{create_blog_audit_log_routes, create_blog_audit_log_read_routes, create_blog_audit_log_write_routes};
 pub use post_handler::{create_post_routes, create_post_read_routes, create_post_write_routes};
 pub use post_tag_handler::{create_post_tag_routes, create_post_tag_read_routes, create_post_tag_write_routes};
 pub use post_view_receipt_handler::{create_post_view_receipt_routes, create_post_view_receipt_read_routes, create_post_view_receipt_write_routes};

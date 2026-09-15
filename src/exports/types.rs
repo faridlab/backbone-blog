@@ -70,64 +70,6 @@ pub struct BlogRef {
 }
 
 // ============================================================================
-// BLOGAUDITLOG TYPES
-// ============================================================================
-
-/// Type-safe ID for BlogAuditLog
-///
-/// Use this instead of raw Uuid for type safety across modules.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct BlogAuditLogId(pub Uuid);
-
-impl BlogAuditLogId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
-}
-
-impl From<Uuid> for BlogAuditLogId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
-}
-
-impl From<BlogAuditLogId> for Uuid {
-    fn from(id: BlogAuditLogId) -> Self {
-        id.0
-    }
-}
-
-/// Data transfer object for BlogAuditLog
-///
-/// This is the public representation of BlogAuditLog for other modules.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogDto {
-    pub id: BlogAuditLogId,
-    pub event: BlogAuditEvent,
-    pub actor: Option<Uuid>,
-    pub subject_type: Option<String>,
-    pub subject_id: Option<Uuid>,
-    pub detail: Option<serde_json::Value>,
-    pub occurred_at: DateTime<Utc>,
-}
-
-/// Summary view of BlogAuditLog for list displays
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogSummary {
-    pub id: BlogAuditLogId,
-}
-
-/// Reference to BlogAuditLog for foreign key relationships
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogAuditLogRef {
-    pub id: BlogAuditLogId,
-}
-
-// ============================================================================
 // POST TYPES
 // ============================================================================
 

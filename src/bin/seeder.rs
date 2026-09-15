@@ -13,7 +13,6 @@ use std::env;
 
 // Import seeders
 use backbone_blog::seeders::SeedBlogSeeder;
-use backbone_blog::seeders::SeedBlogAuditLogSeeder;
 use backbone_blog::seeders::SeedPostSeeder;
 use backbone_blog::seeders::SeedPostTagSeeder;
 use backbone_blog::seeders::SeedPostViewReceiptSeeder;
@@ -48,7 +47,6 @@ async fn main() -> Result<()> {
     // Register seeders in order
     let mut seeders: Vec<Box<dyn Seeder + Send + Sync>> = Vec::new();
     seeders.push(Box::new(SeedBlogSeeder::new()));
-    seeders.push(Box::new(SeedBlogAuditLogSeeder::new()));
     seeders.push(Box::new(SeedPostSeeder::new()));
     seeders.push(Box::new(SeedPostTagSeeder::new()));
     seeders.push(Box::new(SeedPostViewReceiptSeeder::new()));

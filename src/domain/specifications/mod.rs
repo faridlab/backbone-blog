@@ -7,7 +7,6 @@
 pub use backbone_core::{Specification, AndSpecification, OrSpecification, NotSpecification};
 
 pub mod blog_specification;
-pub mod blog_audit_log_specification;
 pub mod post_specification;
 pub mod post_tag_specification;
 pub mod post_view_receipt_specification;

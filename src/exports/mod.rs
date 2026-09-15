@@ -30,9 +30,6 @@ pub use events::*;
 /// - `BlogDto` - Data transfer object for Blog
 /// - `BlogSummary` - Summary view of Blog
 /// - `BlogId` - Type-safe ID wrapper
-/// - `BlogAuditLogDto` - Data transfer object for BlogAuditLog
-/// - `BlogAuditLogSummary` - Summary view of BlogAuditLog
-/// - `BlogAuditLogId` - Type-safe ID wrapper
 /// - `PostDto` - Data transfer object for Post
 /// - `PostSummary` - Summary view of Post
 /// - `PostId` - Type-safe ID wrapper
@@ -53,9 +50,6 @@ pub use events::*;
 /// - `BlogCreatedEvent` - Published when Blog is created
 /// - `BlogUpdatedEvent` - Published when Blog is updated
 /// - `BlogDeletedEvent` - Published when Blog is deleted
-/// - `BlogAuditLogCreatedEvent` - Published when BlogAuditLog is created
-/// - `BlogAuditLogUpdatedEvent` - Published when BlogAuditLog is updated
-/// - `BlogAuditLogDeletedEvent` - Published when BlogAuditLog is deleted
 /// - `PostCreatedEvent` - Published when Post is created
 /// - `PostUpdatedEvent` - Published when Post is updated
 /// - `PostDeletedEvent` - Published when Post is deleted

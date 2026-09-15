@@ -93,4 +93,3 @@ imports:
   - tag.model.yaml                    # TagCategory, Tag (module-local vocabulary)
   - post_tag.model.yaml               # PostTag join
   - post_view_receipt.model.yaml      # PostViewReceipt (the dedup wall, not a visitor)
-  - blog_audit_log.model.yaml         # BlogAuditLog + BlogAuditEvent enum

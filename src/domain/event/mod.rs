@@ -4,8 +4,6 @@
 
 pub mod blog_events;
 pub mod blog_event_handlers;
-pub mod blog_audit_log_events;
-pub mod blog_audit_log_event_handlers;
 pub mod post_events;
 pub mod post_event_handlers;
 pub mod post_tag_events;
@@ -19,8 +17,6 @@ pub mod tag_event_handlers;
 
 pub use blog_events::{BlogEvent, BlogEventPublisher, NoopBlogEventPublisher};
 pub use blog_event_handlers::BlogEventHandler;
-pub use blog_audit_log_events::{BlogAuditLogEvent, BlogAuditLogEventPublisher, NoopBlogAuditLogEventPublisher};
-pub use blog_audit_log_event_handlers::BlogAuditLogEventHandler;
 pub use post_events::{PostEvent, PostEventPublisher, NoopPostEventPublisher};
 pub use post_event_handlers::PostEventHandler;
 pub use post_tag_events::{PostTagEvent, PostTagEventPublisher, NoopPostTagEventPublisher};
