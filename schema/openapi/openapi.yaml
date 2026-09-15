@@ -7,7 +7,7 @@ info:
     This API provides 11 standard CRUD endpoints for each model.
 
 servers:
-  - url: http://localhost:3000
+  - url: /
     description: Development server
 
 tags:
@@ -27,7 +27,7 @@ tags:
     description: Tag management endpoints
 
 paths:
-  /api/v1/blogs:
+  /api/v1/blog/blogs:
     get:
       tags:
         - Blogs
@@ -73,7 +73,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/blogs/{id}:
+  /api/v1/blog/blogs/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -145,7 +145,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/blogs/bulk:
+  /api/v1/blog/blogs/bulk:
     post:
       tags:
         - Blogs
@@ -237,7 +237,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blogs/upsert:
+  /api/v1/blog/blogs/upsert:
     post:
       tags:
         - Blogs
@@ -267,7 +267,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Blog'
 
-  /api/v1/blogs/trash:
+  /api/v1/blog/blogs/trash:
     get:
       tags:
         - Blogs
@@ -284,7 +284,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BlogList'
 
-  /api/v1/blogs/{id}/restore:
+  /api/v1/blog/blogs/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -302,7 +302,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/blogs/empty:
+  /api/v1/blog/blogs/empty:
     delete:
       tags:
         - Blogs
@@ -319,7 +319,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/blogs/delete/bulk:
+  /api/v1/blog/blogs/delete/bulk:
     post:
       tags:
         - Blogs
@@ -339,7 +339,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blogs/restore/bulk:
+  /api/v1/blog/blogs/restore/bulk:
     post:
       tags:
         - Blogs
@@ -357,7 +357,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blogs/restore/all:
+  /api/v1/blog/blogs/restore/all:
     post:
       tags:
         - Blogs
@@ -373,7 +373,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/blogs/trash/bulk:
+  /api/v1/blog/blogs/trash/bulk:
     delete:
       tags:
         - Blogs
@@ -393,7 +393,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blog_audit_logs:
+  /api/v1/blog/blog_audit_logs:
     get:
       tags:
         - BlogAuditLogs
@@ -439,7 +439,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/blog_audit_logs/{id}:
+  /api/v1/blog/blog_audit_logs/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -511,7 +511,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/blog_audit_logs/bulk:
+  /api/v1/blog/blog_audit_logs/bulk:
     post:
       tags:
         - BlogAuditLogs
@@ -603,7 +603,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blog_audit_logs/upsert:
+  /api/v1/blog/blog_audit_logs/upsert:
     post:
       tags:
         - BlogAuditLogs
@@ -633,7 +633,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BlogAuditLog'
 
-  /api/v1/blog_audit_logs/trash:
+  /api/v1/blog/blog_audit_logs/trash:
     get:
       tags:
         - BlogAuditLogs
@@ -650,7 +650,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BlogAuditLogList'
 
-  /api/v1/blog_audit_logs/{id}/restore:
+  /api/v1/blog/blog_audit_logs/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -668,7 +668,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/blog_audit_logs/empty:
+  /api/v1/blog/blog_audit_logs/empty:
     delete:
       tags:
         - BlogAuditLogs
@@ -685,7 +685,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/blog_audit_logs/delete/bulk:
+  /api/v1/blog/blog_audit_logs/delete/bulk:
     post:
       tags:
         - BlogAuditLogs
@@ -705,7 +705,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blog_audit_logs/restore/bulk:
+  /api/v1/blog/blog_audit_logs/restore/bulk:
     post:
       tags:
         - BlogAuditLogs
@@ -723,7 +723,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/blog_audit_logs/restore/all:
+  /api/v1/blog/blog_audit_logs/restore/all:
     post:
       tags:
         - BlogAuditLogs
@@ -739,7 +739,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/blog_audit_logs/trash/bulk:
+  /api/v1/blog/blog_audit_logs/trash/bulk:
     delete:
       tags:
         - BlogAuditLogs
@@ -759,7 +759,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/posts:
+  /api/v1/blog/posts:
     get:
       tags:
         - Posts
@@ -805,7 +805,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/posts/{id}:
+  /api/v1/blog/posts/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -877,7 +877,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/posts/bulk:
+  /api/v1/blog/posts/bulk:
     post:
       tags:
         - Posts
@@ -969,7 +969,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/posts/upsert:
+  /api/v1/blog/posts/upsert:
     post:
       tags:
         - Posts
@@ -999,7 +999,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Post'
 
-  /api/v1/posts/trash:
+  /api/v1/blog/posts/trash:
     get:
       tags:
         - Posts
@@ -1016,7 +1016,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostList'
 
-  /api/v1/posts/{id}/restore:
+  /api/v1/blog/posts/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1034,7 +1034,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/posts/empty:
+  /api/v1/blog/posts/empty:
     delete:
       tags:
         - Posts
@@ -1051,7 +1051,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/posts/delete/bulk:
+  /api/v1/blog/posts/delete/bulk:
     post:
       tags:
         - Posts
@@ -1071,7 +1071,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/posts/restore/bulk:
+  /api/v1/blog/posts/restore/bulk:
     post:
       tags:
         - Posts
@@ -1089,7 +1089,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/posts/restore/all:
+  /api/v1/blog/posts/restore/all:
     post:
       tags:
         - Posts
@@ -1105,7 +1105,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/posts/trash/bulk:
+  /api/v1/blog/posts/trash/bulk:
     delete:
       tags:
         - Posts
@@ -1125,7 +1125,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_tags:
+  /api/v1/blog/post_tags:
     get:
       tags:
         - PostTags
@@ -1171,7 +1171,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/post_tags/{id}:
+  /api/v1/blog/post_tags/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1243,7 +1243,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/post_tags/bulk:
+  /api/v1/blog/post_tags/bulk:
     post:
       tags:
         - PostTags
@@ -1335,7 +1335,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_tags/upsert:
+  /api/v1/blog/post_tags/upsert:
     post:
       tags:
         - PostTags
@@ -1365,7 +1365,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostTag'
 
-  /api/v1/post_tags/trash:
+  /api/v1/blog/post_tags/trash:
     get:
       tags:
         - PostTags
@@ -1382,7 +1382,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostTagList'
 
-  /api/v1/post_tags/{id}/restore:
+  /api/v1/blog/post_tags/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1400,7 +1400,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/post_tags/empty:
+  /api/v1/blog/post_tags/empty:
     delete:
       tags:
         - PostTags
@@ -1417,7 +1417,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/post_tags/delete/bulk:
+  /api/v1/blog/post_tags/delete/bulk:
     post:
       tags:
         - PostTags
@@ -1437,7 +1437,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_tags/restore/bulk:
+  /api/v1/blog/post_tags/restore/bulk:
     post:
       tags:
         - PostTags
@@ -1455,7 +1455,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_tags/restore/all:
+  /api/v1/blog/post_tags/restore/all:
     post:
       tags:
         - PostTags
@@ -1471,7 +1471,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/post_tags/trash/bulk:
+  /api/v1/blog/post_tags/trash/bulk:
     delete:
       tags:
         - PostTags
@@ -1491,7 +1491,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_view_receipts:
+  /api/v1/blog/post_view_receipts:
     get:
       tags:
         - PostViewReceipts
@@ -1537,7 +1537,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/post_view_receipts/{id}:
+  /api/v1/blog/post_view_receipts/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1609,7 +1609,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/post_view_receipts/bulk:
+  /api/v1/blog/post_view_receipts/bulk:
     post:
       tags:
         - PostViewReceipts
@@ -1701,7 +1701,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_view_receipts/upsert:
+  /api/v1/blog/post_view_receipts/upsert:
     post:
       tags:
         - PostViewReceipts
@@ -1731,7 +1731,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostViewReceipt'
 
-  /api/v1/post_view_receipts/trash:
+  /api/v1/blog/post_view_receipts/trash:
     get:
       tags:
         - PostViewReceipts
@@ -1748,7 +1748,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostViewReceiptList'
 
-  /api/v1/post_view_receipts/{id}/restore:
+  /api/v1/blog/post_view_receipts/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1766,7 +1766,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/post_view_receipts/empty:
+  /api/v1/blog/post_view_receipts/empty:
     delete:
       tags:
         - PostViewReceipts
@@ -1783,7 +1783,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/post_view_receipts/delete/bulk:
+  /api/v1/blog/post_view_receipts/delete/bulk:
     post:
       tags:
         - PostViewReceipts
@@ -1803,7 +1803,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_view_receipts/restore/bulk:
+  /api/v1/blog/post_view_receipts/restore/bulk:
     post:
       tags:
         - PostViewReceipts
@@ -1821,7 +1821,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/post_view_receipts/restore/all:
+  /api/v1/blog/post_view_receipts/restore/all:
     post:
       tags:
         - PostViewReceipts
@@ -1837,7 +1837,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/post_view_receipts/trash/bulk:
+  /api/v1/blog/post_view_receipts/trash/bulk:
     delete:
       tags:
         - PostViewReceipts
@@ -1857,7 +1857,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tag_categories:
+  /api/v1/blog/tag_categories:
     get:
       tags:
         - TagCategories
@@ -1903,7 +1903,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/tag_categories/{id}:
+  /api/v1/blog/tag_categories/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1975,7 +1975,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/tag_categories/bulk:
+  /api/v1/blog/tag_categories/bulk:
     post:
       tags:
         - TagCategories
@@ -2067,7 +2067,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tag_categories/upsert:
+  /api/v1/blog/tag_categories/upsert:
     post:
       tags:
         - TagCategories
@@ -2097,7 +2097,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TagCategory'
 
-  /api/v1/tag_categories/trash:
+  /api/v1/blog/tag_categories/trash:
     get:
       tags:
         - TagCategories
@@ -2114,7 +2114,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TagCategoryList'
 
-  /api/v1/tag_categories/{id}/restore:
+  /api/v1/blog/tag_categories/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -2132,7 +2132,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/tag_categories/empty:
+  /api/v1/blog/tag_categories/empty:
     delete:
       tags:
         - TagCategories
@@ -2149,7 +2149,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/tag_categories/delete/bulk:
+  /api/v1/blog/tag_categories/delete/bulk:
     post:
       tags:
         - TagCategories
@@ -2169,7 +2169,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tag_categories/restore/bulk:
+  /api/v1/blog/tag_categories/restore/bulk:
     post:
       tags:
         - TagCategories
@@ -2187,7 +2187,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tag_categories/restore/all:
+  /api/v1/blog/tag_categories/restore/all:
     post:
       tags:
         - TagCategories
@@ -2203,7 +2203,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/tag_categories/trash/bulk:
+  /api/v1/blog/tag_categories/trash/bulk:
     delete:
       tags:
         - TagCategories
@@ -2223,7 +2223,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tags:
+  /api/v1/blog/tags:
     get:
       tags:
         - Tags
@@ -2269,7 +2269,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/tags/{id}:
+  /api/v1/blog/tags/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -2341,7 +2341,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/tags/bulk:
+  /api/v1/blog/tags/bulk:
     post:
       tags:
         - Tags
@@ -2433,7 +2433,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tags/upsert:
+  /api/v1/blog/tags/upsert:
     post:
       tags:
         - Tags
@@ -2463,7 +2463,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tag'
 
-  /api/v1/tags/trash:
+  /api/v1/blog/tags/trash:
     get:
       tags:
         - Tags
@@ -2480,7 +2480,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TagList'
 
-  /api/v1/tags/{id}/restore:
+  /api/v1/blog/tags/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -2498,7 +2498,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/tags/empty:
+  /api/v1/blog/tags/empty:
     delete:
       tags:
         - Tags
@@ -2515,7 +2515,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/tags/delete/bulk:
+  /api/v1/blog/tags/delete/bulk:
     post:
       tags:
         - Tags
@@ -2535,7 +2535,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tags/restore/bulk:
+  /api/v1/blog/tags/restore/bulk:
     post:
       tags:
         - Tags
@@ -2553,7 +2553,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/tags/restore/all:
+  /api/v1/blog/tags/restore/all:
     post:
       tags:
         - Tags
@@ -2569,7 +2569,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/tags/trash/bulk:
+  /api/v1/blog/tags/trash/bulk:
     delete:
       tags:
         - Tags

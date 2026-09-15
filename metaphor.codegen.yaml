@@ -17,6 +17,10 @@
 # same change that lands it.
 
 user_owned:
+  # Hand-written files the audit found undeclared; declared so a schema
+  # regeneration cannot delete them.
+  - "src/infrastructure/persistence/scoped_read.rs"
+
 
   # ⚠ GENERATOR-DEFECT FREEZE (pinned generator only): the marker merge
   # for `// <<< CUSTOM` blocks nested inside the builder constructor
