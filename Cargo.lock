@@ -258,6 +258,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "backbone-auditlog"
+version = "0.1.12"
+source = "git+https://github.com/faridlab/backbone-auditlog?tag=v0.1.12#8da349ec655ce79e309edf37911684169e1c0ac6"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "chrono",
+ "config",
+ "prost",
+ "prost-types",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic",
+ "tonic-build",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "tracing-subscriber",
+ "utoipa",
+ "uuid",
+ "validator",
+]
+
+[[package]]
 name = "backbone-auth"
 version = "2.0.0"
 source = "git+https://github.com/faridlab/backbone-framework?tag=v2.7.23#3baf0772f2131f355104d45d740c748d8f6507ac"
@@ -310,17 +344,17 @@ dependencies = [
 
 [[package]]
 name = "backbone-blog"
-version = "0.2.14"
+version = "0.2.16"
 dependencies = [
  "anyhow",
  "async-trait",
  "axum",
- "backbone-auditlog",
+ "backbone-auditlog 0.1.12",
  "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
  "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
  "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
  "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
- "backbone-rate-limit 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-rate-limit",
  "backbone-website",
  "chrono",
  "config",
@@ -502,18 +536,18 @@ dependencies = [
 
 [[package]]
 name = "backbone-portal"
-version = "0.2.15"
-source = "git+https://github.com/faridlab/backbone-portal?tag=v0.2.15#bef350c05b0894e975ea9210f28b465cd920a980"
+version = "0.2.16"
+source = "git+https://github.com/faridlab/backbone-portal?tag=v0.2.16#b68d1eaa7ee7d3cf8c7888e2392852702b5ab7ba"
 dependencies = [
  "anyhow",
  "async-trait",
  "axum",
- "backbone-auditlog",
- "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-rate-limit 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
+ "backbone-auditlog 0.1.11",
+ "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-rate-limit",
  "backbone-sapiens",
  "chrono",
  "config",
@@ -531,26 +565,6 @@ dependencies = [
  "tracing",
  "uuid",
  "validator",
-]
-
-[[package]]
-name = "backbone-rate-limit"
-version = "2.0.0"
-source = "git+https://github.com/faridlab/backbone-framework?tag=v2.7.23#3baf0772f2131f355104d45d740c748d8f6507ac"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "chrono",
- "futures",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -622,19 +636,19 @@ dependencies = [
 
 [[package]]
 name = "backbone-website"
-version = "0.3.17"
-source = "git+https://github.com/faridlab/backbone-website?tag=v0.3.17#0f166197c3dbdd37bd214d7bc27f790ee74df234"
+version = "0.3.19"
+source = "git+https://github.com/faridlab/backbone-website?tag=v0.3.19#c98488711dbecf792a51b28dd35eec682ddcbfe0"
 dependencies = [
  "anyhow",
  "async-trait",
  "axum",
- "backbone-auditlog",
- "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
- "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
+ "backbone-auditlog 0.1.12",
+ "backbone-auth 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-core 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-messaging 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
+ "backbone-orm 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.24)",
  "backbone-portal",
- "backbone-rate-limit 2.0.0 (git+https://github.com/faridlab/backbone-framework?tag=v2.7.23)",
+ "backbone-rate-limit",
  "chrono",
  "config",
  "hmac",
