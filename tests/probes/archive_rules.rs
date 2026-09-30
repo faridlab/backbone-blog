@@ -64,8 +64,8 @@ async fn archive_is_one_way_and_the_cascade_restores_exactly_its_marker_rows() {
     assert_eq!(cascaded, 2, "exactly the two live posts cascaded");
     assert_eq!(audit_count(&db, "blog_archived").await, 1);
     let detail: serde_json::Value = sqlx::query_scalar(
-        "SELECT detail FROM blog.blog_audit_log \
-          WHERE event = 'blog_archived' AND subject_id = $1",
+        "SELECT changed FROM auditlog.audit_trails \
+          WHERE action = 'blog_archived' AND subject_id = $1::text",
     )
     .bind(blog.id)
     .fetch_one(&db.pool)

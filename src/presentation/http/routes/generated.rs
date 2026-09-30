@@ -72,11 +72,11 @@ pub mod individual {
     use super::*;
 
     pub fn blog_routes(service: Arc<BlogService>) -> Router {
-        create_blog_routes(service)
+        create_blog_read_routes(service)
     }
 
     pub fn post_routes(service: Arc<PostService>) -> Router {
-        create_post_routes(service)
+        create_post_read_routes(service)
     }
 
     pub fn post_tag_routes(service: Arc<PostTagService>) -> Router {
@@ -84,7 +84,7 @@ pub mod individual {
     }
 
     pub fn post_view_receipt_routes(service: Arc<PostViewReceiptService>) -> Router {
-        create_post_view_receipt_routes(service)
+        create_post_view_receipt_read_routes(service)
     }
 
     pub fn tag_category_routes(service: Arc<TagCategoryService>) -> Router {

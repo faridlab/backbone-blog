@@ -258,7 +258,7 @@ async fn the_burst_trips_the_throttle_with_retry_after() {
     // The refusal is audited (refusals are the ONLY audited visit
     // facts).
     let audited: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM blog.blog_audit_log WHERE event = 'visit_throttled'",
+        "SELECT count(*) FROM auditlog.audit_trails WHERE action = 'visit_throttled'",
     )
     .fetch_one(&db.pool)
     .await

@@ -156,6 +156,8 @@ impl backbone_orm::EntityRepoMeta for PostViewReceipt {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("post_id".to_string(), "uuid".to_string());
+        m.insert("window_start".to_string(), "timestamptz".to_string());
+        m.insert("occurred_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {

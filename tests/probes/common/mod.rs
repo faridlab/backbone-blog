@@ -155,7 +155,14 @@ impl Drop for TestDb {
 /// `.up.sql` order — the module's files are self-contained).
 async fn apply_module_migrations(pool: &PgPool, marker: &str) -> Result<(), String> {
     let manifest = env!("CARGO_MANIFEST_DIR");
-    let dir = format!("{manifest}/migrations");
+    // The audit capture schema comes first: this module's writes stage audit
+    // rows, so the auditlog sibling's enums and capture function must exist
+    // before this module's own migrations run.
+    let dirs = [
+        format!("{manifest}/../backbone-auditlog/migrations"),
+        format!("{manifest}/migrations"),
+    ];
+    for dir in dirs {
     let mut files: Vec<std::path::PathBuf> = match std::fs::read_dir(&dir) {
         Ok(rd) => rd
             .filter_map(|e| e.ok())
@@ -183,6 +190,7 @@ async fn apply_module_migrations(pool: &PgPool, marker: &str) -> Result<(), Stri
                 file.display()
             ));
         }
+    }
     }
     Ok(())
 }
@@ -476,7 +484,7 @@ pub async fn tag_post(db: &TestDb, post_id: Uuid, tag_ids: &[uuid::Uuid]) {
 /// assert against).
 pub async fn audit_count(db: &TestDb, event: &str) -> i64 {
     sqlx::query_scalar::<_, i64>(
-        "SELECT count(*) FROM blog.blog_audit_log WHERE event = $1::blog_audit_event",
+        "SELECT count(*) FROM auditlog.audit_trails WHERE action = $1",
     )
     .bind(event)
     .fetch_one(&db.pool)
