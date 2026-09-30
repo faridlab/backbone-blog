@@ -315,6 +315,9 @@ impl backbone_orm::EntityRepoMeta for Post {
         m.insert("blog_id".to_string(), "uuid".to_string());
         m.insert("website_id".to_string(), "uuid".to_string());
         m.insert("archived_by_blog_id".to_string(), "uuid".to_string());
+        m.insert("published_date".to_string(), "timestamptz".to_string());
+        m.insert("post_date".to_string(), "timestamptz".to_string());
+        m.insert("archived_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
