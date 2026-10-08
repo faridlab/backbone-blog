@@ -166,7 +166,8 @@ impl BlogModule {
 /// Builder for BlogModule
 pub struct BlogModuleBuilder {
     db_pool: Option<PgPool>,
-    // <<< CUSTOM - builder state
+    // <<< CUSTOM BUILDER FIELDS
+    // builder state
     publish_notifier:
         Option<std::sync::Arc<dyn crate::application::service::notifier_port::BlogPublishNotifier>>,
     website_surface: Option<std::sync::Arc<dyn backbone_website::exports::WebsiteSurface>>,
@@ -178,7 +179,8 @@ impl BlogModuleBuilder {
     pub fn new() -> Self {
         Self {
             db_pool: None,
-            // <<< CUSTOM - builder defaults
+            // <<< CUSTOM BUILDER DEFAULTS
+            // builder defaults
             publish_notifier: None,
             website_surface: None,
             // END CUSTOM
