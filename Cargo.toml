@@ -1,6 +1,6 @@
 [package]
 name = "backbone-blog"
-version = "0.2.36"
+version = "0.3.0"
 edition = "2021"
 description = "The blog module (Odoo website blog port) — blogs/posts/tags as a tenant-agnostic content domain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
 license = "MIT OR Apache-2.0"
@@ -19,14 +19,14 @@ path = "src/lib.rs"
 # at module creation (single-rev policy: every framework source in the
 # resolved graph resolves to this one tag — no branch floats, no [patch]).
 # -----------------------------------------------------------------------------
-backbone-auditlog = { version = "0.1.28" }
-backbone-core = { version = "2.7.35", features = ["postgres"] }
-backbone-orm = { version = "2.7.35" }
+backbone-auditlog = { version = "0.2.0" }
+backbone-core = { version = "3.0.0", features = ["postgres"] }
+backbone-orm = { version = "3.0.0" }
 # `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
 # the identity extractor the guarded admin tree consumes (the composing host's
 # org middleware inserts it), same as backbone-calendar / backbone-attendance.
-backbone-auth = { version = "2.7.35", features = ["axum"] }
-backbone-rate-limit = { version = "2.7.35" }
+backbone-auth = { version = "3.0.0", features = ["axum"] }
+backbone-rate-limit = { version = "3.0.0" }
 # NOTE (recorded deviation from SPEC.md §7.1, forced by the pinned
 # generator): the schema generator's emitted event scaffolding
 # (src/domain/blog/*.rs — CrudEvent / CrudEventPublisher imports) does not
@@ -35,7 +35,7 @@ backbone-rate-limit = { version = "2.7.35" }
 # table, and the host's outbox_schemas set carries no blog entry — the
 # same zero-events-with-plumbing-dep posture as the website and events
 # modules.
-backbone-messaging = { version = "2.7.35" }
+backbone-messaging = { version = "3.0.0" }
 
 # OpenAPI schema derive. The schema generator emits ungated `use utoipa::ToSchema;`
 # in every entity and DTO file, so the dep is unconditional even though the
@@ -48,7 +48,7 @@ utoipa = { version = "5", features = ["chrono", "uuid"] }
 # surface; the host binds websites to hosts). Tag-equal with the host pin,
 # single-resolve.
 # -----------------------------------------------------------------------------
-backbone-website = { version = "0.3.37" }
+backbone-website = { version = "0.4.0" }
 
 # Sibling modules NOT consumed by design — recorded here so no later seat
 # adds them casually (SPEC.md §7.1):
