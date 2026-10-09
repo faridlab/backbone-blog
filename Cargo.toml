@@ -1,6 +1,6 @@
 [package]
 name = "backbone-blog"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "The blog module (Odoo website blog port) — blogs/posts/tags as a tenant-agnostic content domain, the ONE publish coupling event (flip + stamp + notify in one transaction), read-time lazy scheduled publication with ZERO crons, session-token-deduped visit counting over a receipt wall, and the public/portal record-rule fences as restrictive RLS tiers"
 license = "MIT OR Apache-2.0"
@@ -90,6 +90,15 @@ hmac = "0.12"
 sha2 = "0.10"
 rand = "0.8"
 subtle = "2.5"
+
+
+[features]
+# Generated code gates its OpenAPI derives, request validation and auth extraction
+# behind these features; declaring them keeps every cfg checked by the compiler.
+default = []
+auth = []
+openapi = []
+validation = []
 
 [dev-dependencies]
 tempfile = "3.0"
