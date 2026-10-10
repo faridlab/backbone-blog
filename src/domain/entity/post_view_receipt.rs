@@ -123,6 +123,9 @@ impl super::Entity for PostViewReceipt {
 }
 
 impl backbone_core::PersistentEntity for PostViewReceipt {
+    fn write_protected_fields() -> &'static [&'static str] {
+        &["view_token"]
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }
@@ -161,7 +164,10 @@ impl backbone_orm::EntityRepoMeta for PostViewReceipt {
         m
     }
     fn search_fields() -> &'static [&'static str] {
-        &["view_token"]
+        &[]
+    }
+    fn secret_fields() -> &'static [&'static str] {
+        &["viewToken"]
     }
 }
 

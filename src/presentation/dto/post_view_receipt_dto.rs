@@ -62,10 +62,6 @@ pub struct UpdatePostViewReceiptDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "post_id")]
     pub post_id: Uuid,
-    #[cfg_attr(feature = "validation", validate(length(max = 64)))]
-    #[cfg_attr(feature = "openapi", schema(example = "example"))]
-    #[serde(alias = "view_token")]
-    pub view_token: String,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "window_start")]
     pub window_start: DateTime<Utc>,
@@ -90,10 +86,6 @@ pub struct PatchPostViewReceiptDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "post_id")]
     pub post_id: Option<Uuid>,
-    #[cfg_attr(feature = "validation", validate(length(max = 64)))]
-    #[cfg_attr(feature = "openapi", schema(example = "example"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "view_token")]
-    pub view_token: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "window_start")]
     pub window_start: Option<DateTime<Utc>>,
@@ -105,7 +97,7 @@ pub struct PatchPostViewReceiptDto {
 impl PatchPostViewReceiptDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.post_id.is_some() || self.view_token.is_some() || self.window_start.is_some() || self.occurred_at.is_some()
+        self.post_id.is_some() || self.window_start.is_some() || self.occurred_at.is_some()
     }
 }
 
@@ -255,7 +247,6 @@ impl backbone_core::FromCreateDto<CreatePostViewReceiptDto> for PostViewReceipt 
 impl backbone_core::ApplyUpdateDto<UpdatePostViewReceiptDto> for PostViewReceipt {
     fn apply_update(mut self, dto: UpdatePostViewReceiptDto) -> backbone_core::ServiceResult<Self> {
         self.post_id = dto.post_id;
-        self.view_token = dto.view_token;
         self.window_start = dto.window_start;
         self.occurred_at = dto.occurred_at;
         Ok(self)

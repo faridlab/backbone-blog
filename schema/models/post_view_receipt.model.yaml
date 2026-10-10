@@ -31,7 +31,7 @@ models:
         description: "The visited post (real intra-schema FK, RESTRICT)."
       view_token:
         type: string
-        attributes: ["@required", "@max(64)"]
+        attributes: ["@required", "@max(64)", "@sensitive", "@immutable"]
         description: "The presented (or freshly minted) view token's nonce — the dedup identity arm, never a visitor profile."
       window_start:
         type: datetime
