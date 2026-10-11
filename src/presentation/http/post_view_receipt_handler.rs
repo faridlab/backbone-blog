@@ -187,3 +187,4 @@ pub fn create_protected_post_view_receipt_routes<A: AuthMiddleware + Send + Sync
             }
         }))
 }
+

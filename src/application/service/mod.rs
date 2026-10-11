@@ -14,8 +14,6 @@ pub mod post_view_receipt_service;
 pub mod tag_category_service;
 pub mod tag_service;
 
-// <<< CUSTOM
-// END CUSTOM
 
 pub use blog_service::BlogService;
 pub use post_service::PostService;
@@ -23,8 +21,6 @@ pub use post_tag_service::PostTagService;
 pub use post_view_receipt_service::PostViewReceiptService;
 pub use tag_category_service::TagCategoryService;
 pub use tag_service::TagService;
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

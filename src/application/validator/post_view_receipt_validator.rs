@@ -16,9 +16,5 @@ pub type PostViewReceiptValidator = EntityValidator<PostViewReceipt>;
 pub fn post_view_receipt_validator() -> PostViewReceiptValidator {
     EntityValidator::new()
         .rule(RequiredString::new("view_token", |e: &PostViewReceipt| &e.view_token))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

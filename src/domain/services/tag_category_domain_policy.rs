@@ -18,5 +18,3 @@ use crate::domain::entity::TagCategory;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type TagCategoryDomainPolicy = PermitAllPolicy<TagCategory>;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -19,5 +19,3 @@ pub use post_view_receipt_validator::{PostViewReceiptValidator, post_view_receip
 pub use tag_category_validator::{TagCategoryValidator, tag_category_validator};
 pub use tag_validator::{TagValidator, tag_validator};
 
-// <<< CUSTOM
-// END CUSTOM

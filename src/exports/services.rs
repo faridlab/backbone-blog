@@ -10,28 +10,9 @@
 // CUSTOM SERVICES
 // ============================================================================
 
-// <<< CUSTOM SERVICES START >>>
-// The typed error surface + the verb services (in-process hosts).
-pub use crate::application::service::blog_error::{BlogError, BlogResult};
-pub use crate::application::service::blog_service::BlogCommandService;
-pub use crate::application::service::post_service::{
-    PostCommandService, PublishResult, PUBLISH_FENCED_FIELDS, REFUSED_FIELDS,
-};
-pub use crate::application::service::public_query_service::{
-    DetailAnswer, ListingAnswer, PublicQueryService,
-};
-pub use crate::application::service::tag_service::TagCommandService;
-pub use crate::application::service::visit_service::{
-    FixedWindows, VisitRequest, VisitResponse, VisitService, VISIT_THROTTLE,
-};
-// The publish-notify port (host installs the mail adapter; the module
-// default refuses loudly and the verb parks, never rolls back).
-pub use crate::application::service::notifier_port::{
-    BlogPublishNotifier, RefusingPublishNotifier,
-};
-// The exported route composers (the host mounts these; the module
-// does not self-mount).
-pub use crate::presentation::http::{
-    blog_admin_routes, blog_public_routes, BlogAdminState, BlogPublicState,
-};
-// <<< CUSTOM SERVICES END >>>
+// Add custom public services here
+
+// This file's extension (hand-written; ADR-0031).
+#[path = "services.ext.rs"]
+mod services_ext;
+pub use services_ext::*;

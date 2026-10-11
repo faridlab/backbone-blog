@@ -136,8 +136,6 @@ impl TagCategory {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for TagCategory {

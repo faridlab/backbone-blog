@@ -28,5 +28,3 @@ pub use tag_category_event_handlers::TagCategoryEventHandler;
 pub use tag_events::{TagEvent, TagEventPublisher, NoopTagEventPublisher};
 pub use tag_event_handlers::TagEventHandler;
 
-// <<< CUSTOM
-// END CUSTOM

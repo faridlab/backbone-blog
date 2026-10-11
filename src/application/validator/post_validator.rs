@@ -21,9 +21,5 @@ pub fn post_validator() -> PostValidator {
         .rule(OptionalNotBlank::new("teaser", |e: &Post| e.teaser.as_deref()))
         .rule(OptionalNotBlank::new("author_name", |e: &Post| e.author_name.as_deref()))
         .rule(NonNegative::new("visits", |e: &Post| e.visits as i64))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

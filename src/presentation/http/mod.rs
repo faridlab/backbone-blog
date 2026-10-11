@@ -12,8 +12,6 @@ pub mod post_view_receipt_handler;
 pub mod tag_category_handler;
 pub mod tag_handler;
 
-// <<< CUSTOM
-// END CUSTOM
 
 // Re-exports
 pub use blog_handler::{create_blog_routes, create_blog_read_routes, create_blog_write_routes};
@@ -22,8 +20,6 @@ pub use post_tag_handler::{create_post_tag_routes, create_post_tag_read_routes, 
 pub use post_view_receipt_handler::{create_post_view_receipt_routes, create_post_view_receipt_read_routes, create_post_view_receipt_write_routes};
 pub use tag_category_handler::{create_tag_category_routes, create_tag_category_read_routes, create_tag_category_write_routes};
 pub use tag_handler::{create_tag_routes, create_tag_read_routes, create_tag_write_routes};
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

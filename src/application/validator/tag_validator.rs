@@ -17,9 +17,5 @@ pub fn tag_validator() -> TagValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &Tag| &e.name))
         .rule(RequiredString::new("slug", |e: &Tag| &e.slug))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

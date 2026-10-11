@@ -422,7 +422,7 @@ impl backbone_core::ApplyUpdateDto<UpdatePostDto> for Post {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to Post here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

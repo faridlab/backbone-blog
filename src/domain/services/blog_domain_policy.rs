@@ -18,5 +18,3 @@ use crate::domain::entity::Blog;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type BlogDomainPolicy = PermitAllPolicy<Blog>;
 
-// <<< CUSTOM
-// END CUSTOM

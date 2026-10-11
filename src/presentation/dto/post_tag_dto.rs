@@ -236,7 +236,7 @@ impl backbone_core::ApplyUpdateDto<UpdatePostTagDto> for PostTag {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to PostTag here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

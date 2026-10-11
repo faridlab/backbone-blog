@@ -106,8 +106,6 @@ impl PostViewReceipt {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for PostViewReceipt {

@@ -186,3 +186,4 @@ pub fn create_protected_post_tag_routes<A: AuthMiddleware + Send + Sync + 'stati
             }
         }))
 }
+

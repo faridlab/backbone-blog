@@ -32,5 +32,3 @@ pub type PostViewReceiptService = GenericCrudService<
     PostViewReceiptRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

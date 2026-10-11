@@ -18,9 +18,5 @@ pub fn blog_validator() -> BlogValidator {
         .rule(RequiredString::new("name", |e: &Blog| &e.name))
         .rule(OptionalNotBlank::new("subtitle", |e: &Blog| e.subtitle.as_deref()))
         .rule(OptionalNotBlank::new("description", |e: &Blog| e.description.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

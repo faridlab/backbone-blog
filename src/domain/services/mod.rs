@@ -16,5 +16,3 @@ pub use post_view_receipt_domain_policy::PostViewReceiptDomainPolicy;
 pub use tag_category_domain_policy::TagCategoryDomainPolicy;
 pub use tag_domain_policy::TagDomainPolicy;
 
-// <<< CUSTOM
-// END CUSTOM

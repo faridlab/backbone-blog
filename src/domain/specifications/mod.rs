@@ -13,5 +13,3 @@ pub mod post_view_receipt_specification;
 pub mod tag_category_specification;
 pub mod tag_specification;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -257,7 +257,7 @@ impl backbone_core::ApplyUpdateDto<UpdatePostViewReceiptDto> for PostViewReceipt
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to PostViewReceipt here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

@@ -16,9 +16,5 @@ pub type TagCategoryValidator = EntityValidator<TagCategory>;
 pub fn tag_category_validator() -> TagCategoryValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &TagCategory| &e.name))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

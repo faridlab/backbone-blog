@@ -32,5 +32,3 @@ pub type PostTagService = GenericCrudService<
     PostTagRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

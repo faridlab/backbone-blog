@@ -18,5 +18,3 @@ use crate::domain::entity::PostViewReceipt;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type PostViewReceiptDomainPolicy = PermitAllPolicy<PostViewReceipt>;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -18,5 +18,3 @@ use crate::domain::entity::PostTag;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type PostTagDomainPolicy = PermitAllPolicy<PostTag>;
 
-// <<< CUSTOM
-// END CUSTOM

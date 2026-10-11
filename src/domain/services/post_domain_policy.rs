@@ -18,5 +18,3 @@ use crate::domain::entity::Post;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type PostDomainPolicy = PermitAllPolicy<Post>;
 
-// <<< CUSTOM
-// END CUSTOM
