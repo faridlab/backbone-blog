@@ -32,3 +32,41 @@ pub type PostTagService = GenericCrudService<
     PostTagRepository,
 >;
 
+/// The rules the schema declares for PostTag, checked against the row a create or update
+/// would store. The generated build attaches it to [`PostTagService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct PostTagRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<PostTag> for PostTagRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, PostTag>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `post_id_required` (@required on PostTag.post_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["post_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "post_id")), r::not(r::is_empty(r::trim(r::field(row, "post_id")))))) {
+            refuse.push(Violation::new("post_id", "required", "post_id is required"));
+        }
+        // `tag_id_required` (@required on PostTag.tag_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["tag_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "tag_id")), r::not(r::is_empty(r::trim(r::field(row, "tag_id")))))) {
+            refuse.push(Violation::new("tag_id", "required", "tag_id is required"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

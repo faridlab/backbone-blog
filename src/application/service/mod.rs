@@ -21,6 +21,15 @@ pub use post_tag_service::PostTagService;
 pub use post_view_receipt_service::PostViewReceiptService;
 pub use tag_category_service::TagCategoryService;
 pub use tag_service::TagService;
+pub mod blog_row_rules;
+pub use blog_row_rules::BlogRowRules;
+pub mod post_row_rules;
+pub use post_row_rules::PostRowRules;
+pub use post_tag_service::PostTagRowRules;
+pub use post_view_receipt_service::PostViewReceiptRowRules;
+pub use tag_category_service::TagCategoryRowRules;
+pub mod tag_row_rules;
+pub use tag_row_rules::TagRowRules;
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

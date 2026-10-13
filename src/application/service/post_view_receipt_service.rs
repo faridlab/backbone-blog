@@ -32,3 +32,45 @@ pub type PostViewReceiptService = GenericCrudService<
     PostViewReceiptRepository,
 >;
 
+/// The rules the schema declares for PostViewReceipt, checked against the row a create or update
+/// would store. The generated build attaches it to [`PostViewReceiptService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct PostViewReceiptRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<PostViewReceipt> for PostViewReceiptRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, PostViewReceipt>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let mut shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `post_id_required` (@required on PostViewReceipt.post_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["post_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "post_id")), r::not(r::is_empty(r::trim(r::field(row, "post_id")))))) {
+            refuse.push(Violation::new("post_id", "required", "post_id is required"));
+        }
+        // `view_token_required` (@required on PostViewReceipt.view_token)
+        if (create || (update && r::changed(old.as_ref(), row, &["view_token"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "view_token")), r::not(r::is_empty(r::trim(r::field(row, "view_token")))))) {
+            refuse.push(Violation::new("view_token", "required", "view_token is required"));
+        }
+        // `view_token_max_length` (@max(64) on PostViewReceipt.view_token)
+        if (create || (update && r::changed(old.as_ref(), row, &["view_token"]))) && !r::holds(&r::le(r::length(r::field(row, "view_token")), r::Val::Num(64.0_f64))) {
+            shadow.push(Violation::new("view_token", "max_length", "view_token must be at most 64 characters").with_param("max", 64_i64));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

@@ -227,29 +227,29 @@ impl BlogModuleBuilder {
 
         // Blog service
         let blog_repository = Arc::new(BlogRepository::new(db_pool.clone()));
-        let blog_service = Arc::new(BlogService::with_repository(blog_repository.clone()));
+        let blog_service = Arc::new(BlogService::with_repository(blog_repository.clone()).with_guard(Arc::new(crate::application::service::BlogRowRules)));
 
         // Post service
         let post_repository = Arc::new(PostRepository::new(db_pool.clone()));
-        let post_service = Arc::new(PostService::with_repository(post_repository.clone()));
+        let post_service = Arc::new(PostService::with_repository(post_repository.clone()).with_guard(Arc::new(crate::application::service::PostRowRules)));
 
         // PostTag service
         let post_tag_repository = Arc::new(PostTagRepository::new(db_pool.clone()));
         let post_tag_service =
-            Arc::new(PostTagService::with_repository(post_tag_repository.clone()));
+            Arc::new(PostTagService::with_repository(post_tag_repository.clone()).with_guard(Arc::new(crate::application::service::PostTagRowRules)));
 
         // PostViewReceipt service
         let post_view_receipt_repository =
             Arc::new(PostViewReceiptRepository::new(db_pool.clone()));
         let post_view_receipt_service = Arc::new(PostViewReceiptService::with_repository(
             post_view_receipt_repository.clone(),
-        ));
+        ).with_guard(Arc::new(crate::application::service::PostViewReceiptRowRules)));
 
         // TagCategory service
         let tag_category_repository = Arc::new(TagCategoryRepository::new(db_pool.clone()));
         let tag_category_service = Arc::new(TagCategoryService::with_repository(
             tag_category_repository.clone(),
-        ));
+        ).with_guard(Arc::new(crate::application::service::TagCategoryRowRules)));
 
         // Tag service
         let tag_repository = Arc::new(TagRepository::new(db_pool.clone()));

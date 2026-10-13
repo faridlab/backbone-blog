@@ -20,7 +20,7 @@ path = "src/lib.rs"
 # resolved graph resolves to this one tag — no branch floats, no [patch]).
 # -----------------------------------------------------------------------------
 backbone-auditlog = { version = "0.2.0" }
-backbone-core = { version = "3.1.0", features = ["postgres"] }
+backbone-core = { version = "3.7.0", features = ["postgres"] }
 backbone-orm = { version = "3.1.0" }
 # `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
 # the identity extractor the guarded admin tree consumes (the composing host's
