@@ -167,6 +167,9 @@ impl backbone_orm::EntityRepoMeta for PostViewReceipt {
     fn secret_fields() -> &'static [&'static str] {
         &["viewToken"]
     }
+    fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
+        &[("post", "posts", "postId")]
+    }
 }
 
 /// Builder for PostViewReceipt entity

@@ -195,6 +195,9 @@ impl backbone_orm::EntityRepoMeta for PostTag {
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
+    fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
+        &[("post", "posts", "postId"), ("tag", "tags", "tagId")]
+    }
 }
 
 /// Builder for PostTag entity
