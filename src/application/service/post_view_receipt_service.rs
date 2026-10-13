@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<PostViewReceipt> for PostViewReceipt
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `post_id_required` (@required on PostViewReceipt.post_id)
         if (create || (update && r::changed(old.as_ref(), row, &["post_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "post_id")), r::not(r::is_empty(r::trim(r::field(row, "post_id")))))) {
@@ -68,7 +68,7 @@ impl backbone_core::write_guard::WriteGuard<PostViewReceipt> for PostViewReceipt
         }
         // `view_token_max_length` (@max(64) on PostViewReceipt.view_token)
         if (create || (update && r::changed(old.as_ref(), row, &["view_token"]))) && !r::holds(&r::le(r::length(r::field(row, "view_token")), r::Val::Num(64.0_f64))) {
-            shadow.push(Violation::new("view_token", "max_length", "view_token must be at most 64 characters").with_param("max", 64_i64));
+            refuse.push(Violation::new("view_token", "max_length", "view_token must be at most 64 characters").with_param("max", 64_i64));
         }
         GuardOutcome { refuse, shadow }
     }

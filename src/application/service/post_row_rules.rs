@@ -29,7 +29,7 @@ impl backbone_core::write_guard::WriteGuard<Post> for PostRowRules {
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `blog_id_required` (@required on Post.blog_id)
         if (create || (update && r::changed(old.as_ref(), row, &["blog_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "blog_id")), r::not(r::is_empty(r::trim(r::field(row, "blog_id")))))) {
@@ -45,7 +45,7 @@ impl backbone_core::write_guard::WriteGuard<Post> for PostRowRules {
         }
         // `title_max_length` (@max(200) on Post.title)
         if (create || (update && r::changed(old.as_ref(), row, &["title"]))) && !r::holds(&r::le(r::length(r::field(row, "title")), r::Val::Num(200.0_f64))) {
-            shadow.push(Violation::new("title", "max_length", "title must be at most 200 characters").with_param("max", 200_i64));
+            refuse.push(Violation::new("title", "max_length", "title must be at most 200 characters").with_param("max", 200_i64));
         }
         // `slug_required` (@required on Post.slug)
         if (create || (update && r::changed(old.as_ref(), row, &["slug"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "slug")), r::not(r::is_empty(r::trim(r::field(row, "slug")))))) {
@@ -53,19 +53,19 @@ impl backbone_core::write_guard::WriteGuard<Post> for PostRowRules {
         }
         // `slug_max_length` (@max(120) on Post.slug)
         if (create || (update && r::changed(old.as_ref(), row, &["slug"]))) && !r::holds(&r::le(r::length(r::field(row, "slug")), r::Val::Num(120.0_f64))) {
-            shadow.push(Violation::new("slug", "max_length", "slug must be at most 120 characters").with_param("max", 120_i64));
+            refuse.push(Violation::new("slug", "max_length", "slug must be at most 120 characters").with_param("max", 120_i64));
         }
         // `teaser_max_length` (@max(500) on Post.teaser)
         if (create || (update && r::changed(old.as_ref(), row, &["teaser"]))) && !r::holds(&r::le(r::length(r::field(row, "teaser")), r::Val::Num(500.0_f64))) {
-            shadow.push(Violation::new("teaser", "max_length", "teaser must be at most 500 characters").with_param("max", 500_i64));
+            refuse.push(Violation::new("teaser", "max_length", "teaser must be at most 500 characters").with_param("max", 500_i64));
         }
         // `author_name_max_length` (@max(120) on Post.author_name)
         if (create || (update && r::changed(old.as_ref(), row, &["author_name"]))) && !r::holds(&r::le(r::length(r::field(row, "author_name")), r::Val::Num(120.0_f64))) {
-            shadow.push(Violation::new("author_name", "max_length", "author_name must be at most 120 characters").with_param("max", 120_i64));
+            refuse.push(Violation::new("author_name", "max_length", "author_name must be at most 120 characters").with_param("max", 120_i64));
         }
         // `visits_non_negative` (@non_negative on Post.visits)
         if (create || (update && r::changed(old.as_ref(), row, &["visits"]))) && !r::holds(&r::ge(r::field(row, "visits"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("visits", "non_negative", "visits must not be negative"));
+            refuse.push(Violation::new("visits", "non_negative", "visits must not be negative"));
         }
         GuardOutcome { refuse, shadow }
     }
