@@ -289,7 +289,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-blog"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -425,9 +425,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-portal"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6233d7f134474799d81c81107d7910fed3d2ca5ef25b5ec99469a8b5027d898"
+checksum = "5e60f11ca255da66512af3b9009ce3491f14dc6cf607876dcf28cf7e607d73f0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -480,9 +480,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-sapiens"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "367a40d4574c0b5a49534503e235a5d8ae3b4d3d7c230518004024b20444284c"
+checksum = "b3841e37c577130547a2bb63c869beec0d20c4c254dcc6edba43a72599c9c15f"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -529,9 +529,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-website"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5c0a45f66f75503d41d7d1ac9b8384263cca3293a2a56997c628bb6dec868db"
+checksum = "83941b4897e3a866ad46a176584bc1b05f665f76fe46aaf1f1dcea4a135e1d05"
 dependencies = [
  "anyhow",
  "async-trait",
