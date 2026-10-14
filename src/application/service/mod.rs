@@ -31,5 +31,53 @@ pub use tag_category_service::TagCategoryRowRules;
 pub mod tag_row_rules;
 pub use tag_row_rules::TagRowRules;
 
+/// A `BlogService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_blog_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::BlogRepository>,
+) -> BlogService {
+    BlogService::with_repository(repository).with_guard(std::sync::Arc::new(BlogRowRules))
+}
+
+/// A `PostService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_post_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::PostRepository>,
+) -> PostService {
+    PostService::with_repository(repository).with_guard(std::sync::Arc::new(PostRowRules))
+}
+
+/// A `PostTagService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_post_tag_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::PostTagRepository>,
+) -> PostTagService {
+    PostTagService::with_repository(repository).with_guard(std::sync::Arc::new(PostTagRowRules))
+}
+
+/// A `PostViewReceiptService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_post_view_receipt_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::PostViewReceiptRepository>,
+) -> PostViewReceiptService {
+    PostViewReceiptService::with_repository(repository).with_guard(std::sync::Arc::new(PostViewReceiptRowRules))
+}
+
+/// A `TagCategoryService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_tag_category_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::TagCategoryRepository>,
+) -> TagCategoryService {
+    TagCategoryService::with_repository(repository).with_guard(std::sync::Arc::new(TagCategoryRowRules))
+}
+
+/// A `TagService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_tag_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::TagRepository>,
+) -> TagService {
+    TagService::with_repository(repository).with_guard(std::sync::Arc::new(TagRowRules))
+}
+
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

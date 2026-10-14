@@ -227,33 +227,33 @@ impl BlogModuleBuilder {
 
         // Blog service
         let blog_repository = Arc::new(BlogRepository::new(db_pool.clone()));
-        let blog_service = Arc::new(BlogService::with_repository(blog_repository.clone()).with_guard(Arc::new(crate::application::service::BlogRowRules)));
+        let blog_service = Arc::new(crate::application::service::build_blog_service(blog_repository.clone()));
 
         // Post service
         let post_repository = Arc::new(PostRepository::new(db_pool.clone()));
-        let post_service = Arc::new(PostService::with_repository(post_repository.clone()).with_guard(Arc::new(crate::application::service::PostRowRules)));
+        let post_service = Arc::new(crate::application::service::build_post_service(post_repository.clone()));
 
         // PostTag service
         let post_tag_repository = Arc::new(PostTagRepository::new(db_pool.clone()));
         let post_tag_service =
-            Arc::new(PostTagService::with_repository(post_tag_repository.clone()).with_guard(Arc::new(crate::application::service::PostTagRowRules)));
+            Arc::new(crate::application::service::build_post_tag_service(post_tag_repository.clone()));
 
         // PostViewReceipt service
         let post_view_receipt_repository =
             Arc::new(PostViewReceiptRepository::new(db_pool.clone()));
-        let post_view_receipt_service = Arc::new(PostViewReceiptService::with_repository(
+        let post_view_receipt_service = Arc::new(crate::application::service::build_post_view_receipt_service(
             post_view_receipt_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::PostViewReceiptRowRules)));
+        ));
 
         // TagCategory service
         let tag_category_repository = Arc::new(TagCategoryRepository::new(db_pool.clone()));
-        let tag_category_service = Arc::new(TagCategoryService::with_repository(
+        let tag_category_service = Arc::new(crate::application::service::build_tag_category_service(
             tag_category_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::TagCategoryRowRules)));
+        ));
 
         // Tag service
         let tag_repository = Arc::new(TagRepository::new(db_pool.clone()));
-        let tag_service = Arc::new(TagService::with_repository(tag_repository.clone()));
+        let tag_service = Arc::new(crate::application::service::build_tag_service(tag_repository.clone()));
 
         // <<< CUSTOM
         // The verb layer (the publish notifier defaults to the loud
